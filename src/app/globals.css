@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: #d4920a;
+  --color-accent-hover: #e5a312;
+  --color-accent-dim: rgba(212, 146, 10, 0.6);
+
+  /* Semantic theme colors */
+  --color-t-primary: var(--t-primary);
+  --color-t-secondary: var(--t-secondary);
+  --color-t-muted: var(--t-muted);
+  --color-t-dim: var(--t-dim);
+  --color-t-faint: var(--t-faint);
+  --color-t-ghost: var(--t-ghost);
+  --color-s-base: var(--s-base);
+  --color-s-hover: var(--s-hover);
+  --color-s-input: var(--s-input);
+  --color-s-dropdown: var(--s-dropdown);
+  --color-b-subtle: var(--b-subtle);
+  --color-b-medium: var(--b-medium);
+  --color-bg-header: var(--bg-header);
+}
+
+:root {
+  --background: #060d1b;
+  --foreground: #c8d0dc;
+
+  /* Text */
+  --t-primary: rgba(255, 255, 255, 0.9);
+  --t-secondary: rgba(255, 255, 255, 0.6);
+  --t-muted: rgba(255, 255, 255, 0.5);
+  --t-dim: rgba(255, 255, 255, 0.25);
+  --t-faint: rgba(255, 255, 255, 0.2);
+  --t-ghost: rgba(255, 255, 255, 0.15);
+
+  /* Surfaces */
+  --s-base: rgba(255, 255, 255, 0.02);
+  --s-hover: rgba(255, 255, 255, 0.04);
+  --s-input: rgba(255, 255, 255, 0.03);
+  --s-dropdown: #0a1628;
+
+  /* Borders */
+  --b-subtle: rgba(255, 255, 255, 0.06);
+  --b-medium: rgba(255, 255, 255, 0.08);
+
+  /* Header */
+  --bg-header: rgba(6, 13, 27, 0.8);
+}
+
+html.light {
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
+
+  /* Text */
+  --t-primary: rgba(29, 29, 31, 0.9);
+  --t-secondary: rgba(29, 29, 31, 0.6);
+  --t-muted: rgba(29, 29, 31, 0.5);
+  --t-dim: rgba(29, 29, 31, 0.35);
+  --t-faint: rgba(29, 29, 31, 0.25);
+  --t-ghost: rgba(29, 29, 31, 0.15);
+
+  /* Surfaces */
+  --s-base: rgba(0, 0, 0, 0.03);
+  --s-hover: rgba(0, 0, 0, 0.06);
+  --s-input: rgba(0, 0, 0, 0.04);
+  --s-dropdown: #ffffff;
+
+  /* Borders */
+  --b-subtle: rgba(0, 0, 0, 0.08);
+  --b-medium: rgba(0, 0, 0, 0.12);
+
+  /* Header */
+  --bg-header: rgba(245, 245, 247, 0.85);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 146, 10, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 146, 10, 0.5);
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(6, 13, 27, 0.2);
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 13, 27, 0.4);
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+::selection {
+  background: rgba(212, 146, 10, 0.3);
+  color: #fff;
+}
+
+html.light ::selection {
+  color: #1d1d1f;
+}
