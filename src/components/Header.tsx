@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, Sun, Moon, Globe, User, LogOut } from "lucide-react";
+import { ShoppingCart, Menu, X, Sun, Moon, Globe, User, LogOut, Settings, ChevronDown, Package, Ticket } from "lucide-react";
 import { useCart } from "@/lib/cartContext";
 import { useTheme } from "@/lib/themeContext";
 import { useLanguage } from "@/lib/languageContext";
@@ -16,12 +16,20 @@ export default function Header() {
   const { user, loading: authLoading, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const adminMenuRef = useRef<HTMLDivElement>(null);
+
+  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
+      }
+      if (adminMenuRef.current && !adminMenuRef.current.contains(e.target as Node)) {
+        setAdminMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -56,6 +64,46 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            {isAdmin && (
+              <div className="relative" ref={adminMenuRef}>
+                <button
+                  onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+                  className="flex items-center gap-1 text-[13px] text-[#e5a312] hover:text-[#d4920a] transition-colors duration-300 cursor-pointer"
+                >
+                  <Settings className="w-3.5 h-3.5" strokeWidth={1.5} />
+                  {lang === "he" ? "ניהול" : "Admin"}
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${adminMenuOpen ? "rotate-180" : ""}`} strokeWidth={1.5} />
+                </button>
+                {adminMenuOpen && (
+                  <div className="absolute left-0 top-full mt-2 w-48 bg-s-dropdown border border-b-subtle rounded-xl shadow-lg overflow-hidden z-50">
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-t-muted hover:bg-s-hover hover:text-[#e5a312] transition-colors duration-200"
+                      onClick={() => setAdminMenuOpen(false)}
+                    >
+                      <Settings className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      {lang === "he" ? "לוח בקרה" : "Dashboard"}
+                    </Link>
+                    <Link
+                      href="/admin/scripts"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-t-muted hover:bg-s-hover hover:text-[#e5a312] transition-colors duration-200"
+                      onClick={() => setAdminMenuOpen(false)}
+                    >
+                      <Package className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      {lang === "he" ? "ניהול סקריפטים" : "Manage Scripts"}
+                    </Link>
+                    <Link
+                      href="/admin/coupons"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-t-muted hover:bg-s-hover hover:text-[#e5a312] transition-colors duration-200"
+                      onClick={() => setAdminMenuOpen(false)}
+                    >
+                      <Ticket className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      {lang === "he" ? "ניהול קופונים" : "Manage Coupons"}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
 
           <div className="flex items-center gap-1">
@@ -160,6 +208,24 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            {isAdmin && (
+              <>
+                <div className="h-px bg-b-subtle my-2" />
+                <div className="text-[11px] text-[#e5a312] uppercase tracking-wider py-2 flex items-center gap-1.5">
+                  <Settings className="w-3 h-3" strokeWidth={1.5} />
+                  {lang === "he" ? "ניהול" : "Admin"}
+                </div>
+                <Link href="/admin" className="block py-2.5 text-sm text-t-muted hover:text-[#e5a312] transition-colors ps-5" onClick={() => setMenuOpen(false)}>
+                  {lang === "he" ? "לוח בקרה" : "Dashboard"}
+                </Link>
+                <Link href="/admin/scripts" className="block py-2.5 text-sm text-t-muted hover:text-[#e5a312] transition-colors ps-5" onClick={() => setMenuOpen(false)}>
+                  {lang === "he" ? "ניהול סקריפטים" : "Manage Scripts"}
+                </Link>
+                <Link href="/admin/coupons" className="block py-2.5 text-sm text-t-muted hover:text-[#e5a312] transition-colors ps-5" onClick={() => setMenuOpen(false)}>
+                  {lang === "he" ? "ניהול קופונים" : "Manage Coupons"}
+                </Link>
+              </>
+            )}
           </nav>
         )}
       </div>

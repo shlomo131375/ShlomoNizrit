@@ -113,7 +113,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 { label: t("product.file"), value: script.scriptName },
                 { label: t("product.version"), value: script.version },
                 { label: t("product.category"), value: t(`cat.${script.category}`) },
-                { label: t("product.compatibility"), value: "InDesign CC+" },
+                { label: t("product.compatibility"), value: "InDesign 18+" },
               ].map((item) => (
                 <div key={item.label} className="bg-s-base border border-b-subtle rounded-xl p-4">
                   <div className="text-[11px] text-t-faint uppercase tracking-wider">{item.label}</div>
