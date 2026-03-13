@@ -29,12 +29,41 @@ export default function LoginPage() {
     setLoading(true);
 
     if (mode === "login") {
-      const { error } = await signInWithEmail(email, password);
+      let loginEmail = email;
+
+      // If input doesn't look like an email, try looking up by username
+      if (!email.includes("@")) {
+        try {
+          const res = await fetch("/api/auth/lookup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: email }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            loginEmail = data.email;
+          } else {
+            setError(
+              lang === "he"
+                ? "שם משתמש לא נמצא"
+                : "Username not found"
+            );
+            setLoading(false);
+            return;
+          }
+        } catch {
+          setError(lang === "he" ? "שגיאה בחיבור לשרת" : "Server connection error");
+          setLoading(false);
+          return;
+        }
+      }
+
+      const { error } = await signInWithEmail(loginEmail, password);
       if (error) {
         setError(
           lang === "he"
-            ? "אימייל או סיסמה שגויים"
-            : "Invalid email or password"
+            ? "אימייל/שם משתמש או סיסמה שגויים"
+            : "Invalid email/username or password"
         );
       } else {
         router.push("/");
@@ -232,15 +261,19 @@ export default function LoginPage() {
 
         <div>
           <label className="block text-xs text-t-faint mb-1.5">
-            {lang === "he" ? "אימייל" : "Email"}
+            {mode === "login"
+              ? (lang === "he" ? "אימייל או שם משתמש" : "Email or Username")
+              : (lang === "he" ? "אימייל" : "Email")}
           </label>
           <input
-            type="email"
+            type={mode === "login" ? "text" : "email"}
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-s-input border border-b-medium rounded-xl px-4 py-3 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors duration-300"
-            placeholder={lang === "he" ? "your@email.com" : "your@email.com"}
+            placeholder={mode === "login"
+              ? (lang === "he" ? "אימייל או שם מלא" : "email or full name")
+              : "your@email.com"}
             dir="ltr"
           />
         </div>
