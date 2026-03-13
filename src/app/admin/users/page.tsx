@@ -230,7 +230,7 @@ export default function AdminUsersPage() {
                 <div className="px-5 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {user.avatar ? (
-                      <img src={user.avatar} alt="" className="w-9 h-9 rounded-full" />
+                      <img src={user.avatar} alt="" className="w-9 h-9 rounded-full" referrerPolicy="no-referrer" />
                     ) : (
                       <div className="w-9 h-9 rounded-full bg-[#d4920a]/20 flex items-center justify-center">
                         <span className="text-sm font-medium text-[#e5a312]">
