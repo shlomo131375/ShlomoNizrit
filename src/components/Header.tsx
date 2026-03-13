@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, Sun, Moon, Globe, User, LogOut, Settings, ChevronDown, Package, Ticket } from "lucide-react";
+import { ShoppingCart, Menu, X, Sun, Moon, Globe, User, Users, LogOut, Settings, ChevronDown, Package, Ticket } from "lucide-react";
 import { useCart } from "@/lib/cartContext";
 import { useTheme } from "@/lib/themeContext";
 import { useLanguage } from "@/lib/languageContext";
@@ -107,6 +107,14 @@ export default function Header() {
                     >
                       <Package className="w-3.5 h-3.5" strokeWidth={1.5} />
                       {lang === "he" ? "ניהול הזמנות" : "Manage Orders"}
+                    </Link>
+                    <Link
+                      href="/admin/users"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-t-muted hover:bg-s-hover hover:text-[#e5a312] transition-colors duration-200"
+                      onClick={() => setAdminMenuOpen(false)}
+                    >
+                      <Users className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      {lang === "he" ? "ניהול משתמשים" : "Manage Users"}
                     </Link>
                   </div>
                 )}
