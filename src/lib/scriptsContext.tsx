@@ -29,7 +29,7 @@ function dbToScript(row: Record<string, unknown>): Script {
     category: row.category as string,
     price: row.price === null ? "free" : (row.price as number),
     version: row.version as string,
-    downloadUrl: row.download_url as string,
+    downloadUrl: "", // Hidden from client - served via secure API only
     icon: (row.icon as string) || null,
     videoUrl: (row.video_url as string) || null,
   };
@@ -58,7 +58,7 @@ export function ScriptsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("scripts")
-      .select("*")
+      .select("id, script_name, display_name, description, category, price, version, icon, video_url, sort_order")
       .eq("active", true)
       .order("sort_order", { ascending: true });
 

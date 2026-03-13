@@ -142,7 +142,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
               {isFree ? (
                 <a
-                  href={script.downloadUrl}
+                  href={`/api/download-free?id=${script.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-[#d4920a] hover:bg-[#e5a312] text-white py-3.5 rounded-full text-sm font-medium transition-all duration-300"

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, ArrowLeft, Check, User, Mail, MessageCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, User, Mail, MessageCircle, Loader2 } from "lucide-react";
 import { useCart } from "@/lib/cartContext";
 import { useAuth } from "@/lib/authContext";
 import { useScripts } from "@/lib/scriptsContext";
@@ -12,11 +13,13 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const { items, totalPrice, discountAmount, finalPrice, coupon, clearCart } = useCart();
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const { formatPrice } = useScripts();
   const { t, lang } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [acceptUpdates, setAcceptUpdates] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"paypal" | "contact">(PAYPAL_CLIENT_ID ? "paypal" : "contact");
@@ -116,10 +119,58 @@ export default function CheckoutPage() {
     );
   }
 
+  const createOrder = async (paypalOrderId?: string, method: "paypal" | "contact" = "contact") => {
+    setProcessing(true);
+    try {
+      const orderItems = items.map((i) => ({
+        script_id: i.script.id,
+        script_name: i.script.displayName,
+        price: i.script.price === "free" ? 0 : i.script.price,
+      }));
+
+      const res = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paypal_order_id: paypalOrderId || null,
+          payment_method: method,
+          user_email: form.email,
+          user_name: form.name,
+          user_phone: form.phone,
+          user_id: user?.id || "anonymous",
+          items: orderItems,
+          total_amount: finalPrice,
+          discount_amount: discountAmount,
+          coupon_code: coupon?.code || null,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Error creating order");
+        setProcessing(false);
+        return;
+      }
+
+      clearCart();
+
+      // If payment completed (PayPal), redirect to download page
+      if (data.download_token) {
+        router.push(`/download/${data.download_token}`);
+      } else {
+        // Contact method - show thank you
+        setSubmitted(true);
+      }
+    } catch {
+      alert(lang === "he" ? "שגיאה ביצירת ההזמנה" : "Error creating order");
+      setProcessing(false);
+    }
+  };
+
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    clearCart();
-    setSubmitted(true);
+    createOrder(undefined, "contact");
   };
 
   const orderDescription = items.map((i) => i.script.displayName).join(", ");
@@ -255,10 +306,11 @@ export default function CheckoutPage() {
                         }],
                       });
                     }}
-                    onApprove={async (_data, actions) => {
-                      await actions.order?.capture();
-                      clearCart();
-                      setSubmitted(true);
+                    onApprove={async (data, actions) => {
+                      const details = await actions.order?.capture();
+                      if (details?.status === "COMPLETED") {
+                        await createOrder(data.orderID, "paypal");
+                      }
                     }}
                   />
                 </PayPalScriptProvider>
@@ -303,9 +355,17 @@ export default function CheckoutPage() {
 
                 <button
                   type="submit"
-                  className="w-full bg-[#d4920a] hover:bg-[#e5a312] text-white py-3.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer"
+                  disabled={processing}
+                  className="w-full bg-[#d4920a] hover:bg-[#e5a312] disabled:opacity-60 text-white py-3.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {t("checkout.submit")} — {"\u20AA"}{finalPrice}
+                  {processing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {lang === "he" ? "שולח..." : "Sending..."}
+                    </>
+                  ) : (
+                    <>{t("checkout.submit")} — {"\u20AA"}{finalPrice}</>
+                  )}
                 </button>
               </div>
             )}
