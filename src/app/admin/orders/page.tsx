@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShoppingBag, ArrowRight, Eye, Check, Clock, X, Search } from "lucide-react";
+import { ShoppingBag, ArrowRight, Eye, Check, Clock, X, Search, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
@@ -33,6 +33,8 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchOrders = async () => {
     const { data } = await supabase
@@ -97,6 +99,14 @@ export default function AdminOrdersPage() {
     await navigator.clipboard.writeText(url);
     setCopiedToken(token);
     setTimeout(() => setCopiedToken(null), 2000);
+  };
+
+  const deleteOrder = async (orderId: string) => {
+    setDeletingId(orderId);
+    await supabase.from("orders").delete().eq("id", orderId);
+    setConfirmDeleteId(null);
+    await fetchOrders();
+    setDeletingId(null);
   };
 
   const formatDate = (dateStr: string) => {
@@ -272,6 +282,31 @@ export default function AdminOrdersPage() {
                             אשר תשלום
                           </>
                         )}
+                      </button>
+                    )}
+                    {confirmDeleteId === order.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => deleteOrder(order.id)}
+                          disabled={deletingId === order.id}
+                          className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-red-400/10 text-red-400 hover:bg-red-400/20 transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {deletingId === order.id ? "מוחק..." : "אישור"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="flex items-center text-xs px-2 py-1.5 rounded-lg text-t-ghost hover:text-t-dim transition-colors cursor-pointer"
+                        >
+                          <X className="w-3 h-3" strokeWidth={1.5} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteId(order.id)}
+                        className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-t-ghost hover:bg-red-400/10 hover:text-red-400"
+                        title="מחק הזמנה"
+                      >
+                        <Trash2 className="w-3 h-3" strokeWidth={1.5} />
                       </button>
                     )}
                   </div>

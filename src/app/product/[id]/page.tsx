@@ -1,8 +1,8 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowLeft, ShoppingCart, Check, Download, Play } from "lucide-react";
+import { ArrowRight, ArrowLeft, ShoppingCart, Check, Download, Play, Package } from "lucide-react";
 import { useScripts } from "@/lib/scriptsContext";
 import { useCart } from "@/lib/cartContext";
 import { useLanguage } from "@/lib/languageContext";
@@ -34,9 +34,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { id } = use(params);
   const { scripts, getScriptById, formatPrice } = useScripts();
   const script = getScriptById(id);
-  const { addToCart, isInCart } = useCart();
+  const { addToCart, isInCart, isOrdered } = useCart();
   const { t, lang } = useLanguage();
   const BackArrow = lang === "he" ? ArrowRight : ArrowLeft;
+  const alreadyOrdered = isOrdered(id);
+
+  // Build combined video list: videos array + legacy videoUrl
+  const allVideos: { url: string; title: string; is_main: boolean }[] = [];
+  if (script) {
+    if (script.videos && script.videos.length > 0) {
+      // Use videos array (already sorted by sort_order from context)
+      script.videos.forEach((v) => allVideos.push(v));
+    } else if (script.videoUrl) {
+      // Fallback to legacy single video
+      allVideos.push({ url: script.videoUrl, title: script.displayName, is_main: true });
+    }
+  }
+
+  const mainVideoIndex = allVideos.findIndex((v) => v.is_main);
+  const initialIndex = mainVideoIndex >= 0 ? mainVideoIndex : 0;
+  const [activeVideoIndex, setActiveVideoIndex] = useState(initialIndex);
 
   if (!script) {
     return (
@@ -51,7 +68,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const inCart = isInCart(script.id);
   const isFree = script.price === "free";
-  const embedUrl = script.videoUrl ? getYoutubeEmbedUrl(script.videoUrl) : null;
+  const currentVideo = allVideos[activeVideoIndex];
+  const embedUrl = currentVideo ? getYoutubeEmbedUrl(currentVideo.url) : null;
 
   const related = scripts
     .filter((s) => s.category === script.category && s.id !== script.id)
@@ -60,7 +78,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const features = [
     t("product.instantDownload"),
     t("product.freeUpdates"),
-    t("product.personalSupport"),
     t("product.singleLicense"),
   ];
 
@@ -84,14 +101,41 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <div className="lg:col-span-3 space-y-8">
           {/* Video */}
           {embedUrl ? (
-            <div className="aspect-video rounded-2xl overflow-hidden bg-s-base border border-b-subtle">
-              <iframe
-                src={embedUrl}
-                title={script.displayName}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+            <div>
+              <div className="aspect-video rounded-2xl overflow-hidden bg-s-base border border-b-subtle">
+                <iframe
+                  src={embedUrl}
+                  title={currentVideo?.title || script.displayName}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+
+              {/* Video selector - only show if multiple videos */}
+              {allVideos.length > 1 && (
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+                  {allVideos.map((video, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setActiveVideoIndex(index)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-300 cursor-pointer border ${
+                        activeVideoIndex === index
+                          ? "bg-[#d4920a]/15 border-[#d4920a]/30 text-[#e5a312]"
+                          : "bg-s-base border-b-subtle text-t-dim hover:text-t-secondary hover:border-t-ghost"
+                      }`}
+                    >
+                      <Play className="w-3 h-3" strokeWidth={1.5} />
+                      {video.title || `${lang === "he" ? "סרטון" : "Video"} ${index + 1}`}
+                      {video.is_main && (
+                        <span className="text-[9px] bg-[#d4920a]/20 text-[#e5a312] px-1.5 py-0.5 rounded-full">
+                          {lang === "he" ? "ראשי" : "Main"}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="aspect-video rounded-2xl bg-s-base border border-b-subtle flex items-center justify-center">
@@ -131,8 +175,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <h1 className="text-xl font-semibold text-t-primary mb-1 tracking-tight">{script.displayName}</h1>
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-[11px] text-t-faint uppercase tracking-wider">{t(`cat.${script.category}`)}</span>
-                {script.videoUrl && (
-                  <Play className="w-3 h-3 text-t-ghost" strokeWidth={1.5} />
+                {allVideos.length > 0 && (
+                  <span className="flex items-center gap-1 text-[11px] text-t-ghost">
+                    <Play className="w-3 h-3" strokeWidth={1.5} />
+                    {allVideos.length > 1 ? `${allVideos.length} ${lang === "he" ? "סרטונים" : "videos"}` : ""}
+                  </span>
                 )}
               </div>
 
@@ -150,6 +197,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <Download className="w-4 h-4" strokeWidth={1.5} />
                   {t("product.downloadFree")}
                 </a>
+              ) : alreadyOrdered ? (
+                <div className="w-full flex items-center justify-center gap-2 bg-s-hover border border-b-subtle text-t-dim py-3.5 rounded-full text-sm font-medium">
+                  <Package className="w-4 h-4" strokeWidth={1.5} />
+                  {lang === "he" ? "כבר הוזמן" : "Already Ordered"}
+                </div>
               ) : inCart ? (
                 <Link
                   href="/cart"

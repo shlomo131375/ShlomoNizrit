@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Users, ArrowRight, Gift, Tag, ChevronDown, X, Search, Check, Mail, Calendar, LogIn, MapPin } from "lucide-react";
+import { Plus, Trash2, Users, ArrowRight, Gift, Tag, ChevronDown, X, Search, Check, Mail, Calendar, LogIn, MapPin, Phone, UserPlus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useScripts } from "@/lib/scriptsContext";
 import Link from "next/link";
@@ -13,6 +13,7 @@ interface AuthUser {
   avatar: string;
   country: string;
   city: string;
+  phone: string;
   provider: string;
   created_at: string;
   last_sign_in: string | null;
@@ -43,7 +44,7 @@ export default function AdminUsersPage() {
   const [activeUserEmail, setActiveUserEmail] = useState<string | null>(null);
   const [activeUserName, setActiveUserName] = useState<string>("");
 
-  // Form state
+  // Benefit form state
   const [benefitType, setBenefitType] = useState<"coupon" | "free_script">("free_script");
   const [couponCode, setCouponCode] = useState("");
   const [scriptId, setScriptId] = useState("");
@@ -53,6 +54,16 @@ export default function AdminUsersPage() {
   const [scriptDropdownOpen, setScriptDropdownOpen] = useState(false);
   const [scriptSearch, setScriptSearch] = useState("");
   const scriptDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Add user form
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser] = useState({ email: "", password: "", name: "", country: "", city: "", phone: "" });
+  const [addingUser, setAddingUser] = useState(false);
+  const [addUserError, setAddUserError] = useState("");
+
+  // Delete confirmation
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -65,13 +76,14 @@ export default function AdminUsersPage() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const fetchAuthUsers = async () => {
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    return session ? { Authorization: `Bearer ${session.access_token}` } : {};
+  };
 
-    const res = await fetch("/api/admin/users", {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
+  const fetchAuthUsers = async () => {
+    const headers = await getAuthHeaders();
+    const res = await fetch("/api/admin/users", { headers });
     if (res.ok) {
       const data = await res.json();
       setAuthUsers(data.users || []);
@@ -154,6 +166,45 @@ export default function AdminUsersPage() {
     fetchBenefits();
   };
 
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddingUser(true);
+    setAddUserError("");
+
+    const headers = await getAuthHeaders();
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(newUser),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setAddUserError(data.error);
+    } else {
+      setNewUser({ email: "", password: "", name: "", country: "", city: "", phone: "" });
+      setShowAddUser(false);
+      fetchAuthUsers();
+    }
+    setAddingUser(false);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    setDeletingId(userId);
+    const headers = await getAuthHeaders();
+    const res = await fetch("/api/admin/users", {
+      method: "DELETE",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+
+    if (res.ok) {
+      setAuthUsers((prev) => prev.filter((u) => u.id !== userId));
+    }
+    setDeleteConfirmId(null);
+    setDeletingId(null);
+  };
+
   const getScriptName = (id: string) => {
     const s = scripts.find((s) => s.id === id);
     return s?.displayName || id;
@@ -174,34 +225,116 @@ export default function AdminUsersPage() {
   const usedBenefits = benefits.filter((b) => b.used).length;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 lg:px-8 py-16">
-      <div className="flex items-center justify-between mb-10">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
+      <div className="flex items-center justify-between mb-6 sm:mb-10">
         <div>
           <Link href="/admin" className="text-xs text-t-ghost hover:text-t-dim transition-colors mb-2 inline-flex items-center gap-1">
             <ArrowRight className="w-3 h-3" strokeWidth={1.5} />
             ניהול
           </Link>
-          <h1 className="text-2xl font-bold text-t-primary tracking-tight">ניהול משתמשים</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-t-primary tracking-tight">ניהול משתמשים</h1>
         </div>
+        <button
+          onClick={() => { setShowAddUser(!showAddUser); setAddUserError(""); }}
+          className="flex items-center gap-1.5 bg-[#d4920a] hover:bg-[#e5a312] text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 cursor-pointer"
+        >
+          <UserPlus className="w-4 h-4" strokeWidth={1.5} />
+          <span className="hidden sm:inline">הוסף משתמש</span>
+          <span className="sm:hidden">הוסף</span>
+        </button>
       </div>
 
+      {/* Add User Form */}
+      {showAddUser && (
+        <form onSubmit={handleAddUser} className="bg-s-base border border-b-subtle rounded-xl p-4 sm:p-5 mb-6 space-y-3">
+          <h2 className="text-xs font-medium text-t-dim uppercase tracking-wider">הוספת משתמש חדש</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input
+              type="text"
+              value={newUser.name}
+              onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+              placeholder="שם מלא"
+              className="w-full bg-s-input border border-b-medium rounded-lg px-4 py-2.5 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+            />
+            <input
+              type="email"
+              required
+              value={newUser.email}
+              onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+              placeholder="אימייל"
+              className="w-full bg-s-input border border-b-medium rounded-lg px-4 py-2.5 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+              dir="ltr"
+            />
+            <input
+              type="password"
+              required
+              value={newUser.password}
+              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+              placeholder="סיסמה (מינימום 6)"
+              className="w-full bg-s-input border border-b-medium rounded-lg px-4 py-2.5 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+              dir="ltr"
+              minLength={6}
+            />
+            <input
+              type="tel"
+              value={newUser.phone}
+              onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+              placeholder="טלפון"
+              className="w-full bg-s-input border border-b-medium rounded-lg px-4 py-2.5 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+              dir="ltr"
+            />
+            <input
+              type="text"
+              value={newUser.country}
+              onChange={(e) => setNewUser({ ...newUser, country: e.target.value })}
+              placeholder="מדינה"
+              className="w-full bg-s-input border border-b-medium rounded-lg px-4 py-2.5 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+            />
+            <input
+              type="text"
+              value={newUser.city}
+              onChange={(e) => setNewUser({ ...newUser, city: e.target.value })}
+              placeholder="עיר"
+              className="w-full bg-s-input border border-b-medium rounded-lg px-4 py-2.5 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+            />
+          </div>
+          {addUserError && <p className="text-xs text-red-400">{addUserError}</p>}
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={addingUser}
+              className="bg-[#d4920a] hover:bg-[#e5a312] disabled:opacity-50 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-300 cursor-pointer"
+            >
+              {addingUser ? "יוצר..." : "צור משתמש"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddUser(false)}
+              className="border border-b-medium text-t-dim hover:text-t-secondary px-5 py-2 rounded-lg text-sm transition-all duration-300 cursor-pointer"
+            >
+              ביטול
+            </button>
+          </div>
+        </form>
+      )}
+
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6 sm:mb-8">
         {[
           { label: "משתמשים רשומים", value: authUsers.length.toString() },
           { label: "סה״כ הטבות", value: totalBenefits.toString() },
           { label: "הטבות פעילות", value: activeBenefits.toString() },
           { label: "הטבות מומשו", value: usedBenefits.toString() },
         ].map((stat) => (
-          <div key={stat.label} className="bg-s-base border border-b-subtle rounded-xl p-5">
-            <div className="text-[11px] text-t-faint uppercase tracking-wider">{stat.label}</div>
-            <div className="text-xl font-semibold text-t-primary mt-1 tracking-tight">{stat.value}</div>
+          <div key={stat.label} className="bg-s-base border border-b-subtle rounded-xl p-3 sm:p-5">
+            <div className="text-[10px] sm:text-[11px] text-t-faint uppercase tracking-wider">{stat.label}</div>
+            <div className="text-lg sm:text-xl font-semibold text-t-primary mt-1 tracking-tight">{stat.value}</div>
           </div>
         ))}
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
+      <div className="relative mb-4 sm:mb-6">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-t-ghost" strokeWidth={1.5} />
         <input
           type="text"
@@ -221,85 +354,145 @@ export default function AdminUsersPage() {
           <p className="text-sm text-t-dim">{searchQuery ? "לא נמצאו תוצאות" : "אין משתמשים רשומים"}</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredUsers.map((user) => {
             const userBenefits = getUserBenefits(user.email);
             const isFormOpen = activeUserEmail === user.email;
+            const isDeleteConfirm = deleteConfirmId === user.id;
 
             return (
               <div key={user.id} className="bg-s-base border border-b-subtle rounded-xl overflow-hidden">
                 {/* User header */}
-                <div className="px-5 py-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {user.avatar ? (
-                      <img src={user.avatar} alt="" className="w-9 h-9 rounded-full" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-[#d4920a]/20 flex items-center justify-center">
-                        <span className="text-sm font-medium text-[#e5a312]">
-                          {(user.name || user.email || "U").charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div>
-                      <div className="text-sm font-medium text-t-secondary">
-                        {user.name || user.email}
-                      </div>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        <span className="text-xs text-t-ghost font-mono flex items-center gap-1" dir="ltr">
-                          <Mail className="w-3 h-3" strokeWidth={1.5} />
-                          {user.email}
-                        </span>
-                        <span className="text-[10px] text-t-ghost flex items-center gap-1">
-                          <Calendar className="w-3 h-3" strokeWidth={1.5} />
-                          {new Date(user.created_at).toLocaleDateString("he-IL")}
-                        </span>
-                        {user.last_sign_in && (
-                          <span className="text-[10px] text-t-ghost flex items-center gap-1">
-                            <LogIn className="w-3 h-3" strokeWidth={1.5} />
-                            {new Date(user.last_sign_in).toLocaleDateString("he-IL")}
+                <div className="px-4 sm:px-5 py-3 sm:py-4">
+                  <div className="flex items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt="" className="w-9 h-9 rounded-full flex-shrink-0" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-[#d4920a]/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-medium text-[#e5a312]">
+                            {(user.name || user.email || "U").charAt(0).toUpperCase()}
                           </span>
-                        )}
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                          user.provider === "google" ? "bg-blue-400/10 text-blue-400" : "bg-s-hover text-t-ghost"
-                        }`}>
-                          {user.provider === "google" ? "Google" : "Email"}
-                        </span>
-                        {(user.country || user.city) && (
-                          <span className="text-[10px] text-t-ghost flex items-center gap-1">
-                            <MapPin className="w-3 h-3" strokeWidth={1.5} />
-                            {[user.city, user.country].filter(Boolean).join(", ")}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-t-secondary truncate">
+                          {user.name || user.email}
+                        </div>
+                        {/* Desktop info row */}
+                        <div className="hidden sm:flex items-center gap-3 mt-0.5 flex-wrap">
+                          <span className="text-xs text-t-ghost font-mono flex items-center gap-1" dir="ltr">
+                            <Mail className="w-3 h-3" strokeWidth={1.5} />
+                            {user.email}
                           </span>
-                        )}
+                          {user.phone && (
+                            <span className="text-[10px] text-t-ghost flex items-center gap-1">
+                              <Phone className="w-3 h-3" strokeWidth={1.5} />
+                              {user.phone}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-t-ghost flex items-center gap-1">
+                            <Calendar className="w-3 h-3" strokeWidth={1.5} />
+                            {new Date(user.created_at).toLocaleDateString("he-IL")}
+                          </span>
+                          {user.last_sign_in && (
+                            <span className="text-[10px] text-t-ghost flex items-center gap-1">
+                              <LogIn className="w-3 h-3" strokeWidth={1.5} />
+                              {new Date(user.last_sign_in).toLocaleDateString("he-IL")}
+                            </span>
+                          )}
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                            user.provider === "google" ? "bg-blue-400/10 text-blue-400" : "bg-s-hover text-t-ghost"
+                          }`}>
+                            {user.provider === "google" ? "Google" : "Email"}
+                          </span>
+                          {(user.country || user.city) && (
+                            <span className="text-[10px] text-t-ghost flex items-center gap-1">
+                              <MapPin className="w-3 h-3" strokeWidth={1.5} />
+                              {[user.city, user.country].filter(Boolean).join(", ")}
+                            </span>
+                          )}
+                        </div>
+                        {/* Mobile info */}
+                        <div className="sm:hidden text-[11px] text-t-ghost mt-0.5" dir="ltr">{user.email}</div>
                       </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {userBenefits.length > 0 && (
+                        <span className="text-[10px] sm:text-xs text-t-faint hidden sm:inline">
+                          {userBenefits.length} {userBenefits.length === 1 ? "הטבה" : "הטבות"}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => isFormOpen ? closeBenefitForm() : openBenefitForm(user.email, user.name)}
+                        className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition-all duration-300 cursor-pointer ${
+                          isFormOpen
+                            ? "bg-red-400/10 text-red-400 hover:bg-red-400/20"
+                            : "bg-[#d4920a]/10 text-[#e5a312] hover:bg-[#d4920a]/20"
+                        }`}
+                      >
+                        {isFormOpen ? (
+                          <><X className="w-3 h-3" strokeWidth={1.5} /> <span className="hidden sm:inline">ביטול</span></>
+                        ) : (
+                          <><Plus className="w-3 h-3" strokeWidth={1.5} /> <span className="hidden sm:inline">הטבה</span></>
+                        )}
+                      </button>
+                      {/* Delete user button */}
+                      {isDeleteConfirm ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            disabled={deletingId === user.id}
+                            className="text-[10px] sm:text-xs text-red-400 hover:text-red-300 transition-colors cursor-pointer px-1.5 py-1"
+                          >
+                            {deletingId === user.id ? "..." : "אישור"}
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirmId(null)}
+                            className="text-[10px] sm:text-xs text-t-ghost hover:text-t-dim transition-colors cursor-pointer px-1.5 py-1"
+                          >
+                            ביטול
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setDeleteConfirmId(user.id)}
+                          className="text-t-ghost hover:text-red-400 transition-colors cursor-pointer p-1.5"
+                          title="מחק משתמש"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {userBenefits.length > 0 && (
-                      <span className="text-xs text-t-faint">
-                        {userBenefits.length} {userBenefits.length === 1 ? "הטבה" : "הטבות"}
+                  {/* Mobile extra info */}
+                  <div className="sm:hidden flex items-center gap-2 mt-2 flex-wrap">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      user.provider === "google" ? "bg-blue-400/10 text-blue-400" : "bg-s-hover text-t-ghost"
+                    }`}>
+                      {user.provider === "google" ? "Google" : "Email"}
+                    </span>
+                    <span className="text-[10px] text-t-ghost">
+                      {new Date(user.created_at).toLocaleDateString("he-IL")}
+                    </span>
+                    {(user.country || user.city) && (
+                      <span className="text-[10px] text-t-ghost">
+                        {[user.city, user.country].filter(Boolean).join(", ")}
                       </span>
                     )}
-                    <button
-                      onClick={() => isFormOpen ? closeBenefitForm() : openBenefitForm(user.email, user.name)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 cursor-pointer ${
-                        isFormOpen
-                          ? "bg-red-400/10 text-red-400 hover:bg-red-400/20"
-                          : "bg-[#d4920a]/10 text-[#e5a312] hover:bg-[#d4920a]/20"
-                      }`}
-                    >
-                      {isFormOpen ? (
-                        <><X className="w-3 h-3" strokeWidth={1.5} /> ביטול</>
-                      ) : (
-                        <><Plus className="w-3 h-3" strokeWidth={1.5} /> הטבה</>
-                      )}
-                    </button>
+                    {userBenefits.length > 0 && (
+                      <span className="text-[10px] text-t-faint">
+                        {userBenefits.length} הטבות
+                      </span>
+                    )}
                   </div>
                 </div>
 
                 {/* Benefit form for this user */}
                 {isFormOpen && (
-                  <form onSubmit={handleSubmit} className="px-5 py-4 border-t border-b-subtle bg-s-hover/30 space-y-3">
+                  <form onSubmit={handleSubmit} className="px-4 sm:px-5 py-4 border-t border-b-subtle bg-s-hover/30 space-y-3">
                     <div className="flex gap-2">
                       <button
                         type="button"
@@ -422,16 +615,16 @@ export default function AdminUsersPage() {
                     {userBenefits.map((b) => (
                       <div
                         key={b.id}
-                        className={`px-5 py-3 flex items-center justify-between ${b.used ? "opacity-50" : ""}`}
+                        className={`px-4 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${b.used ? "opacity-50" : ""}`}
                       >
                         <div className="flex items-center gap-3">
                           {b.benefit_type === "free_script" ? (
-                            <Gift className="w-4 h-4 text-[#e5a312]" strokeWidth={1.5} />
+                            <Gift className="w-4 h-4 text-[#e5a312] flex-shrink-0" strokeWidth={1.5} />
                           ) : (
-                            <Tag className="w-4 h-4 text-[#e5a312]" strokeWidth={1.5} />
+                            <Tag className="w-4 h-4 text-[#e5a312] flex-shrink-0" strokeWidth={1.5} />
                           )}
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm text-t-muted">
                                 {b.benefit_type === "free_script"
                                   ? `סקריפט חינם: ${b.script_id ? getScriptName(b.script_id) : "לא ידוע"}`
@@ -451,7 +644,7 @@ export default function AdminUsersPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 self-end sm:self-center">
                           <button
                             onClick={() => toggleUsed(b.id, b.used)}
                             className={`text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${

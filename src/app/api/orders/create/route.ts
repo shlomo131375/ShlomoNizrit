@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
       user_email,
       user_name,
       user_phone,
+      user_country,
+      user_city,
+      receipt_name,
+      accept_updates,
       user_id,
       items,
       total_amount,
@@ -68,6 +72,10 @@ export async function POST(request: NextRequest) {
       user_email: string;
       user_name: string;
       user_phone: string;
+      user_country?: string;
+      user_city?: string;
+      receipt_name?: string | null;
+      accept_updates?: boolean;
       user_id: string;
       items: OrderItem[];
       total_amount: number;
@@ -88,6 +96,33 @@ export async function POST(request: NextRequest) {
     const cleanName = sanitizeInput(user_name || "");
     const cleanPhone = sanitizeInput(user_phone || "");
     const cleanCoupon = coupon_code ? sanitizeInput(coupon_code) : null;
+
+    // Check for duplicate orders — same user, same script
+    if (user_id && user_id !== "anonymous") {
+      const { data: existingOrders } = await supabaseServer
+        .from("orders")
+        .select("id, items")
+        .eq("user_id", user_id);
+
+      if (existingOrders && existingOrders.length > 0) {
+        const orderedScriptIds = new Set<string>();
+        for (const order of existingOrders) {
+          const orderItems: OrderItem[] = typeof order.items === "string" ? JSON.parse(order.items) : order.items;
+          for (const item of orderItems) {
+            orderedScriptIds.add(item.script_id);
+          }
+        }
+
+        const duplicates = items.filter((i: OrderItem) => orderedScriptIds.has(i.script_id));
+        if (duplicates.length > 0) {
+          const names = duplicates.map((d: OrderItem) => d.script_name).join(", ");
+          return NextResponse.json(
+            { error: `כבר קיימת הזמנה עבור: ${names}`, duplicate: true },
+            { status: 409 }
+          );
+        }
+      }
+    }
 
     // For PayPal orders, verify the payment
     let paymentStatus = "pending";
@@ -124,7 +159,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Send notification email to admin (fire and forget)
-    sendAdminNotification(user_name, user_email, items, total_amount, payment_method).catch(console.error);
+    sendAdminNotification({
+      customerName: cleanName,
+      customerEmail: user_email.trim(),
+      customerPhone: cleanPhone,
+      customerCountry: user_country || "",
+      customerCity: user_city || "",
+      receiptName: receipt_name ? sanitizeInput(receipt_name) : null,
+      acceptUpdates: accept_updates || false,
+      items,
+      totalAmount: total_amount,
+      discountAmount: discount_amount || 0,
+      couponCode: cleanCoupon,
+      paymentMethod: payment_method,
+    }).catch(console.error);
 
     return NextResponse.json({
       success: true,
@@ -138,25 +186,34 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function sendAdminNotification(
-  customerName: string,
-  customerEmail: string,
-  items: OrderItem[],
-  totalAmount: number,
-  paymentMethod: string,
-) {
-  // Send WhatsApp-style notification via webhook (optional)
-  // For now, we log it - admin can check the orders table in the admin panel
+interface NotificationData {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerCountry: string;
+  customerCity: string;
+  receiptName: string | null;
+  acceptUpdates: boolean;
+  items: OrderItem[];
+  totalAmount: number;
+  discountAmount: number;
+  couponCode: string | null;
+  paymentMethod: string;
+}
+
+async function sendAdminNotification(data: NotificationData) {
   console.log(`
 === NEW ORDER ===
-Customer: ${customerName} (${customerEmail})
-Payment: ${paymentMethod}
-Items: ${items.map((i) => i.script_name).join(", ")}
-Total: ₪${totalAmount}
+Customer: ${data.customerName} (${data.customerEmail})
+Phone: ${data.customerPhone}
+Location: ${data.customerCity}, ${data.customerCountry}
+Receipt Name: ${data.receiptName || data.customerName}
+Payment: ${data.paymentMethod}
+Items: ${data.items.map((i) => i.script_name).join(", ")}
+Total: ₪${data.totalAmount}
 =================
   `);
 
-  // If admin email webhook is configured, send notification
   const webhookUrl = process.env.NOTIFICATION_WEBHOOK_URL;
   if (webhookUrl) {
     await fetch(webhookUrl, {
@@ -165,14 +222,21 @@ Total: ₪${totalAmount}
       body: JSON.stringify({
         event: "new_order",
         customer: {
-          name: customerName,
-          email: customerEmail,
+          name: data.customerName,
+          email: data.customerEmail,
+          phone: data.customerPhone,
+          country: data.customerCountry,
+          city: data.customerCity,
+          accept_updates: data.acceptUpdates,
         },
         order: {
-          payment_method: paymentMethod,
-          total: totalAmount,
+          payment_method: data.paymentMethod,
+          total: data.totalAmount,
+          discount: data.discountAmount,
+          coupon_code: data.couponCode,
           currency: "ILS",
-          items: items.map((i) => ({
+          receipt_name: data.receiptName || data.customerName,
+          items: data.items.map((i) => ({
             name: i.script_name,
             price: i.price,
           })),

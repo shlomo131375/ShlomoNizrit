@@ -29,7 +29,7 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
       <h1 className="text-2xl font-bold text-t-primary mb-10 tracking-tight">ניהול</h1>
 
       {/* Stats */}

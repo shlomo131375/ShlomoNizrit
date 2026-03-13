@@ -21,6 +21,7 @@ interface ScriptsContextType {
 const ScriptsContext = createContext<ScriptsContextType | undefined>(undefined);
 
 function dbToScript(row: Record<string, unknown>): Script {
+  const videos = Array.isArray(row.videos) ? row.videos as { url: string; title: string; sort_order: number; is_main: boolean }[] : [];
   return {
     id: row.id as string,
     scriptName: row.script_name as string,
@@ -32,6 +33,7 @@ function dbToScript(row: Record<string, unknown>): Script {
     downloadUrl: "", // Hidden from client - served via secure API only
     icon: (row.icon as string) || null,
     videoUrl: (row.video_url as string) || null,
+    videos: videos.sort((a, b) => a.sort_order - b.sort_order),
   };
 }
 
@@ -47,6 +49,7 @@ function scriptToDb(script: Partial<Script> & { id?: string }) {
   if (script.downloadUrl !== undefined) db.download_url = script.downloadUrl;
   if (script.icon !== undefined) db.icon = script.icon;
   if (script.videoUrl !== undefined) db.video_url = script.videoUrl;
+  if (script.videos !== undefined) db.videos = script.videos;
   return db;
 }
 
@@ -58,7 +61,7 @@ export function ScriptsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("scripts")
-      .select("id, script_name, display_name, description, category, price, version, icon, video_url, sort_order")
+      .select("id, script_name, display_name, description, category, price, version, icon, video_url, videos, sort_order")
       .eq("active", true)
       .order("sort_order", { ascending: true });
 

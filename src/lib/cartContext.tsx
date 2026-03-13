@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import type { Script } from "@/data/scripts";
 import { supabase } from "./supabase";
+import { useAuth } from "./authContext";
 
 export interface CartItem {
   script: Script;
@@ -26,6 +27,7 @@ interface CartContextType {
   discountAmount: number;
   finalPrice: number;
   isInCart: (scriptId: string) => boolean;
+  isOrdered: (scriptId: string) => boolean;
   coupon: AppliedCoupon | null;
   couponLoading: boolean;
   couponError: string | null;
@@ -36,18 +38,45 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
+  const [orderedScriptIds, setOrderedScriptIds] = useState<Set<string>>(new Set());
   const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
 
+  // Fetch user's ordered script IDs
+  useEffect(() => {
+    if (!user) {
+      setOrderedScriptIds(new Set());
+      return;
+    }
+    supabase
+      .from("orders")
+      .select("items")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (data) {
+          const ids = new Set<string>();
+          for (const order of data) {
+            const orderItems = typeof order.items === "string" ? JSON.parse(order.items) : order.items;
+            for (const item of orderItems) {
+              ids.add(item.script_id);
+            }
+          }
+          setOrderedScriptIds(ids);
+        }
+      });
+  }, [user]);
+
   const addToCart = useCallback((script: Script) => {
     if (script.price === "free") return;
+    if (orderedScriptIds.has(script.id)) return;
     setItems((prev) => {
       if (prev.find((item) => item.script.id === script.id)) return prev;
       return [...prev, { script, quantity: 1 }];
     });
-  }, []);
+  }, [orderedScriptIds]);
 
   const removeFromCart = useCallback((scriptId: string) => {
     setItems((prev) => prev.filter((item) => item.script.id !== scriptId));
@@ -148,9 +177,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items]
   );
 
+  const isOrdered = useCallback(
+    (scriptId: string) => orderedScriptIds.has(scriptId),
+    [orderedScriptIds]
+  );
+
   return (
     <CartContext.Provider
-      value={{ items, addToCart, removeFromCart, clearCart, totalItems, totalPrice, discountAmount, finalPrice, isInCart, coupon, couponLoading, couponError, applyCoupon, removeCoupon }}
+      value={{ items, addToCart, removeFromCart, clearCart, totalItems, totalPrice, discountAmount, finalPrice, isInCart, isOrdered, coupon, couponLoading, couponError, applyCoupon, removeCoupon }}
     >
       {children}
     </CartContext.Provider>

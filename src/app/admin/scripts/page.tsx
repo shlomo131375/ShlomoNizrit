@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Plus, Trash2, ArrowRight, Pencil, Search, Eye, ChevronDown, X, GripVertical } from "lucide-react";
+import { Plus, Trash2, ArrowRight, Pencil, Search, Eye, ChevronDown, Play, Star } from "lucide-react";
 import { useScripts } from "@/lib/scriptsContext";
 import Link from "next/link";
 import type { Script } from "@/data/scripts";
 
 const CATEGORIES = ["עימוד", "ניווט", "ייצוא", "עיצוב"];
+
+interface FormVideo {
+  url: string;
+  title: string;
+  sort_order: number;
+  is_main: boolean;
+}
 
 interface FormData {
   id: string;
@@ -19,6 +26,7 @@ interface FormData {
   version: string;
   downloadUrl: string;
   videoUrl: string;
+  videos: FormVideo[];
 }
 
 const emptyForm: FormData = {
@@ -32,6 +40,7 @@ const emptyForm: FormData = {
   version: "1.0.1",
   downloadUrl: "",
   videoUrl: "",
+  videos: [],
 };
 
 export default function AdminScriptsPage() {
@@ -80,6 +89,7 @@ export default function AdminScriptsPage() {
       version: script.version,
       downloadUrl: script.downloadUrl,
       videoUrl: script.videoUrl || "",
+      videos: script.videos || [],
     });
     setError("");
     setShowForm(true);
@@ -100,6 +110,7 @@ export default function AdminScriptsPage() {
       downloadUrl: form.downloadUrl.trim(),
       icon: null,
       videoUrl: form.videoUrl.trim() || null,
+      videos: form.videos.filter((v) => v.url.trim()),
     };
 
     if (editingId) {
@@ -140,8 +151,8 @@ export default function AdminScriptsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-8 py-16">
-      <div className="flex items-center justify-between mb-10">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
+      <div className="flex items-center justify-between mb-6 sm:mb-10">
         <div>
           <Link href="/admin" className="text-xs text-t-ghost hover:text-t-dim transition-colors mb-2 inline-flex items-center gap-1">
             <ArrowRight className="w-3 h-3" strokeWidth={1.5} />
@@ -309,9 +320,9 @@ export default function AdminScriptsPage() {
               />
             </div>
 
-            {/* Video URL */}
+            {/* Video URL (legacy/main) */}
             <div className="sm:col-span-2">
-              <label className="block text-xs text-t-faint mb-1.5">קישור סרטון (אופציונלי)</label>
+              <label className="block text-xs text-t-faint mb-1.5">סרטון ראשי (אופציונלי)</label>
               <input
                 type="url"
                 value={form.videoUrl}
@@ -320,6 +331,94 @@ export default function AdminScriptsPage() {
                 className="w-full bg-s-input border border-b-medium rounded-lg px-4 py-2.5 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
                 dir="ltr"
               />
+            </div>
+
+            {/* Multiple Videos */}
+            <div className="sm:col-span-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs text-t-faint">סרטונים נוספים</label>
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({
+                    ...prev,
+                    videos: [...prev.videos, { url: "", title: "", sort_order: prev.videos.length, is_main: false }],
+                  }))}
+                  className="flex items-center gap-1 text-[11px] text-[#e5a312] hover:text-[#fdc43f] transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" strokeWidth={1.5} />
+                  הוסף סרטון
+                </button>
+              </div>
+              {form.videos.length > 0 && (
+                <div className="space-y-2">
+                  {form.videos.map((video, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-s-hover/50 rounded-lg p-2">
+                      <input
+                        type="url"
+                        value={video.url}
+                        onChange={(e) => {
+                          const updated = [...form.videos];
+                          updated[idx] = { ...updated[idx], url: e.target.value };
+                          setForm((prev) => ({ ...prev, videos: updated }));
+                        }}
+                        placeholder="https://youtu.be/..."
+                        className="flex-1 bg-s-input border border-b-medium rounded-lg px-3 py-2 text-xs text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+                        dir="ltr"
+                      />
+                      <input
+                        type="text"
+                        value={video.title}
+                        onChange={(e) => {
+                          const updated = [...form.videos];
+                          updated[idx] = { ...updated[idx], title: e.target.value };
+                          setForm((prev) => ({ ...prev, videos: updated }));
+                        }}
+                        placeholder="שם הסרטון"
+                        className="w-32 bg-s-input border border-b-medium rounded-lg px-3 py-2 text-xs text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+                      />
+                      <input
+                        type="number"
+                        value={video.sort_order}
+                        onChange={(e) => {
+                          const updated = [...form.videos];
+                          updated[idx] = { ...updated[idx], sort_order: Number(e.target.value) };
+                          setForm((prev) => ({ ...prev, videos: updated }));
+                        }}
+                        className="w-14 bg-s-input border border-b-medium rounded-lg px-2 py-2 text-xs text-t-primary text-center focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+                        title="סדר"
+                        dir="ltr"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...form.videos];
+                          updated[idx] = { ...updated[idx], is_main: !updated[idx].is_main };
+                          // Only one can be main
+                          if (updated[idx].is_main) {
+                            updated.forEach((v, i) => { if (i !== idx) v.is_main = false; });
+                          }
+                          setForm((prev) => ({ ...prev, videos: updated }));
+                        }}
+                        className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                          video.is_main ? "text-[#e5a312] bg-[#d4920a]/15" : "text-t-ghost hover:text-[#e5a312]"
+                        }`}
+                        title="סרטון ראשי"
+                      >
+                        <Star className="w-3.5 h-3.5" strokeWidth={1.5} fill={video.is_main ? "currentColor" : "none"} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm((prev) => ({ ...prev, videos: prev.videos.filter((_, i) => i !== idx) }));
+                        }}
+                        className="text-t-ghost hover:text-red-400 transition-colors cursor-pointer p-2"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -387,8 +486,11 @@ export default function AdminScriptsPage() {
                         <span className={`text-[11px] ${script.price === "free" ? "text-[#e5a312]/60" : "text-t-muted"}`}>
                           {formatPrice(script.price)}
                         </span>
-                        {script.videoUrl && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#d4920a]/60" />
+                        {(script.videoUrl || (script.videos && script.videos.length > 0)) && (
+                          <span className="flex items-center gap-1 text-[10px] text-t-ghost">
+                            <Play className="w-3 h-3" strokeWidth={1.5} />
+                            {script.videos && script.videos.length > 0 ? script.videos.length : 1}
+                          </span>
                         )}
                       </div>
                     </div>

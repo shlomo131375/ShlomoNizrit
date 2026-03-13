@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Play, Check, ArrowLeft, ArrowRight } from "lucide-react";
+import { ShoppingCart, Play, Check, ArrowLeft, ArrowRight, Package } from "lucide-react";
 import type { Script } from "@/data/scripts";
 import { formatPrice } from "@/data/scripts";
 import { useCart } from "@/lib/cartContext";
@@ -12,9 +12,10 @@ interface ScriptCardProps {
 }
 
 export default function ScriptCard({ script }: ScriptCardProps) {
-  const { addToCart, isInCart } = useCart();
+  const { addToCart, isInCart, isOrdered } = useCart();
   const { t, lang } = useLanguage();
   const inCart = isInCart(script.id);
+  const ordered = isOrdered(script.id);
   const isFree = script.price === "free";
   const Arrow = lang === "he" ? ArrowLeft : ArrowRight;
 
@@ -65,6 +66,11 @@ export default function ScriptCard({ script }: ScriptCardProps) {
               <span>{t("card.download")}</span>
               <Arrow className="w-3.5 h-3.5" strokeWidth={1.5} />
             </Link>
+          ) : ordered ? (
+            <span className="flex items-center gap-1.5 text-[13px] text-t-ghost">
+              <Package className="w-3.5 h-3.5" strokeWidth={1.5} />
+              <span>{lang === "he" ? "כבר הוזמן" : "Ordered"}</span>
+            </span>
           ) : inCart ? (
             <Link
               href="/cart"

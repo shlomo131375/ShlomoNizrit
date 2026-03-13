@@ -1,3 +1,10 @@
+export interface VideoItem {
+  url: string;
+  title: string;
+  sort_order: number;
+  is_main: boolean;
+}
+
 export interface Script {
   id: string;
   scriptName: string;
@@ -9,6 +16,7 @@ export interface Script {
   downloadUrl: string;
   icon: string | null;
   videoUrl: string | null;
+  videos?: VideoItem[];
 }
 
 export const categories = [

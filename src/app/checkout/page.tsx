@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/authContext";
 import { useScripts } from "@/lib/scriptsContext";
 import { useLanguage } from "@/lib/languageContext";
 import { supabase } from "@/lib/supabase";
+import { isValidEmail, isValidPhone } from "@/lib/sanitize";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
@@ -29,9 +30,12 @@ export default function CheckoutPage() {
   const { t, lang } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", country: "", city: "" });
   const [acceptUpdates, setAcceptUpdates] = useState(false);
+  const [receiptOtherName, setReceiptOtherName] = useState(false);
+  const [receiptName, setReceiptName] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"paypal" | "contact">(PAYPAL_CLIENT_ID ? "paypal" : "contact");
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [benefits, setBenefits] = useState<UserBenefit[]>([]);
   const [freeScriptIds, setFreeScriptIds] = useState<Set<string>>(new Set());
   const BackArrow = lang === "he" ? ArrowRight : ArrowLeft;
@@ -42,6 +46,8 @@ export default function CheckoutPage() {
         name: prev.name || user.user_metadata?.full_name || "",
         email: prev.email || user.email || "",
         phone: prev.phone || user.user_metadata?.phone || "",
+        country: prev.country || user.user_metadata?.country || "",
+        city: prev.city || user.user_metadata?.city || "",
       }));
 
       // Fetch user benefits
@@ -179,6 +185,10 @@ export default function CheckoutPage() {
           user_email: form.email,
           user_name: form.name,
           user_phone: form.phone,
+          user_country: form.country,
+          user_city: form.city,
+          receipt_name: receiptOtherName ? receiptName : null,
+          accept_updates: acceptUpdates,
           user_id: user?.id || "anonymous",
           items: orderItems,
           total_amount: adjustedFinalPrice,
@@ -222,8 +232,21 @@ export default function CheckoutPage() {
     }
   };
 
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    if (!isValidEmail(form.email)) {
+      errors.email = lang === "he" ? "כתובת אימייל לא תקינה" : "Invalid email address";
+    }
+    if (!isValidPhone(form.phone)) {
+      errors.phone = lang === "he" ? "מספר טלפון לא תקין" : "Invalid phone number";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     createOrder(undefined, "contact");
   };
 
@@ -282,23 +305,70 @@ export default function CheckoutPage() {
             <div className="space-y-4">
               <h2 className="text-[11px] font-medium text-t-dim uppercase tracking-wider mb-3">{t("checkout.personalInfo")}</h2>
               {[
-                { label: t("checkout.fullName"), key: "name" as const, type: "text", placeholder: t("checkout.fullName"), dir: lang === "he" ? "rtl" : "ltr" },
-                { label: t("checkout.email"), key: "email" as const, type: "email", placeholder: "email@example.com", dir: "ltr" },
-                { label: t("checkout.phone"), key: "phone" as const, type: "tel", placeholder: "054-000-0000", dir: "ltr" },
+                { label: t("checkout.fullName"), key: "name" as const, type: "text", placeholder: t("checkout.fullName"), dir: lang === "he" ? "rtl" : "ltr", required: true },
+                { label: t("checkout.email"), key: "email" as const, type: "email", placeholder: "email@example.com", dir: "ltr", required: true },
+                { label: t("checkout.phone"), key: "phone" as const, type: "tel", placeholder: "054-000-0000", dir: "ltr", required: true },
+                { label: lang === "he" ? "מדינה" : "Country", key: "country" as const, type: "text", placeholder: lang === "he" ? "ישראל" : "Israel", dir: lang === "he" ? "rtl" : "ltr", required: false },
+                { label: lang === "he" ? "עיר" : "City", key: "city" as const, type: "text", placeholder: lang === "he" ? "תל אביב" : "Tel Aviv", dir: lang === "he" ? "rtl" : "ltr", required: false },
               ].map((field) => (
                 <div key={field.key}>
                   <label className="block text-xs text-t-faint mb-1.5">{field.label}</label>
                   <input
                     type={field.type}
-                    required
+                    required={field.required}
                     dir={field.dir}
                     value={form[field.key]}
-                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                    className="w-full bg-s-input border border-b-medium rounded-xl px-4 py-3 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors duration-300"
+                    onChange={(e) => {
+                      setForm({ ...form, [field.key]: e.target.value });
+                      if (formErrors[field.key]) setFormErrors((prev) => { const next = { ...prev }; delete next[field.key]; return next; });
+                    }}
+                    className={`w-full bg-s-input border rounded-xl px-4 py-3 text-sm text-t-primary placeholder-t-ghost focus:outline-none transition-colors duration-300 ${
+                      formErrors[field.key] ? "border-red-400/50 focus:border-red-400/70" : "border-b-medium focus:border-[#d4920a]/30"
+                    }`}
                     placeholder={field.placeholder}
                   />
+                  {formErrors[field.key] && (
+                    <p className="text-[11px] text-red-400 mt-1">{formErrors[field.key]}</p>
+                  )}
                 </div>
               ))}
+
+              {/* Receipt other name checkbox */}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <div className="relative mt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={receiptOtherName}
+                    onChange={(e) => { setReceiptOtherName(e.target.checked); if (!e.target.checked) setReceiptName(""); }}
+                    className="peer sr-only"
+                  />
+                  <div className="w-[18px] h-[18px] rounded border border-b-medium bg-s-input peer-checked:bg-[#d4920a] peer-checked:border-[#d4920a] transition-all duration-200 flex items-center justify-center">
+                    {receiptOtherName && (
+                      <Check className="w-3 h-3 text-white" strokeWidth={2.5} />
+                    )}
+                  </div>
+                </div>
+                <span className="text-xs text-t-dim group-hover:text-t-muted transition-colors leading-relaxed">
+                  {lang === "he" ? "שם הקבלה ע\"ש אחר" : "Receipt under a different name"}
+                </span>
+              </label>
+
+              {receiptOtherName && (
+                <div>
+                  <label className="block text-xs text-t-faint mb-1.5">
+                    {lang === "he" ? "שם לקבלה" : "Receipt Name"}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    dir={lang === "he" ? "rtl" : "ltr"}
+                    value={receiptName}
+                    onChange={(e) => setReceiptName(e.target.value)}
+                    className="w-full bg-s-input border border-b-medium rounded-xl px-4 py-3 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors duration-300"
+                    placeholder={lang === "he" ? "שם מלא לקבלה" : "Full name for receipt"}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Email updates opt-in */}
@@ -387,6 +457,7 @@ export default function CheckoutPage() {
                   <PayPalButtons
                     style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay", height: 45 }}
                     createOrder={(_data, actions) => {
+                      if (!validateForm()) return Promise.reject("Validation failed");
                       return actions.order.create({
                         intent: "CAPTURE",
                         purchase_units: [{
