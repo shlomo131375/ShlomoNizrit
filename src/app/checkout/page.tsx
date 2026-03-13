@@ -3,18 +3,27 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, ArrowLeft, Check, User, Mail, MessageCircle, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, User, Mail, MessageCircle, Loader2, Gift, Tag } from "lucide-react";
 import { useCart } from "@/lib/cartContext";
 import { useAuth } from "@/lib/authContext";
 import { useScripts } from "@/lib/scriptsContext";
 import { useLanguage } from "@/lib/languageContext";
+import { supabase } from "@/lib/supabase";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
 
+interface UserBenefit {
+  id: string;
+  benefit_type: "coupon" | "free_script";
+  coupon_code: string | null;
+  script_id: string | null;
+  used: boolean;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalPrice, discountAmount, finalPrice, coupon, clearCart } = useCart();
+  const { items, totalPrice, discountAmount, finalPrice, coupon, clearCart, applyCoupon } = useCart();
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const { formatPrice } = useScripts();
   const { t, lang } = useLanguage();
@@ -23,6 +32,8 @@ export default function CheckoutPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [acceptUpdates, setAcceptUpdates] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"paypal" | "contact">(PAYPAL_CLIENT_ID ? "paypal" : "contact");
+  const [benefits, setBenefits] = useState<UserBenefit[]>([]);
+  const [freeScriptIds, setFreeScriptIds] = useState<Set<string>>(new Set());
   const BackArrow = lang === "he" ? ArrowRight : ArrowLeft;
 
   useEffect(() => {
@@ -32,8 +43,39 @@ export default function CheckoutPage() {
         email: prev.email || user.email || "",
         phone: prev.phone || user.user_metadata?.phone || "",
       }));
+
+      // Fetch user benefits
+      supabase
+        .from("user_benefits")
+        .select("*")
+        .eq("user_email", user.email?.toLowerCase())
+        .eq("used", false)
+        .then(({ data }) => {
+          if (data) {
+            setBenefits(data);
+            // Auto-detect free scripts in cart
+            const freeIds = new Set<string>();
+            data.forEach((b) => {
+              if (b.benefit_type === "free_script" && b.script_id && items.some((i) => i.script.id === b.script_id)) {
+                freeIds.add(b.script_id);
+              }
+            });
+            setFreeScriptIds(freeIds);
+          }
+        });
     }
-  }, [user]);
+  }, [user, items]);
+
+  // Calculate adjusted prices with free scripts
+  const freeScriptsDiscount = items.reduce((sum, i) => {
+    if (freeScriptIds.has(i.script.id) && i.script.price !== "free") {
+      return sum + (i.script.price as number);
+    }
+    return sum;
+  }, 0);
+
+  const adjustedFinalPrice = Math.max(0, finalPrice - freeScriptsDiscount);
+  const availableCoupons = benefits.filter((b) => b.benefit_type === "coupon" && b.coupon_code);
 
   if (items.length === 0 && !submitted) {
     return (
@@ -125,7 +167,7 @@ export default function CheckoutPage() {
       const orderItems = items.map((i) => ({
         script_id: i.script.id,
         script_name: i.script.displayName,
-        price: i.script.price === "free" ? 0 : i.script.price,
+        price: freeScriptIds.has(i.script.id) ? 0 : (i.script.price === "free" ? 0 : i.script.price),
       }));
 
       const res = await fetch("/api/orders/create", {
@@ -139,8 +181,8 @@ export default function CheckoutPage() {
           user_phone: form.phone,
           user_id: user?.id || "anonymous",
           items: orderItems,
-          total_amount: finalPrice,
-          discount_amount: discountAmount,
+          total_amount: adjustedFinalPrice,
+          discount_amount: discountAmount + freeScriptsDiscount,
           coupon_code: coupon?.code || null,
         }),
       });
@@ -151,6 +193,18 @@ export default function CheckoutPage() {
         alert(data.error || "Error creating order");
         setProcessing(false);
         return;
+      }
+
+      // Mark used benefits
+      const usedBenefitIds = benefits
+        .filter((b) =>
+          (b.benefit_type === "free_script" && b.script_id && freeScriptIds.has(b.script_id)) ||
+          (b.benefit_type === "coupon" && b.coupon_code && coupon?.code === b.coupon_code)
+        )
+        .map((b) => b.id);
+
+      if (usedBenefitIds.length > 0) {
+        await supabase.from("user_benefits").update({ used: true }).in("id", usedBenefitIds);
       }
 
       clearCart();
@@ -186,6 +240,41 @@ export default function CheckoutPage() {
       </Link>
 
       <h1 className="text-2xl font-bold text-t-primary mb-10 tracking-tight">{t("checkout.title")}</h1>
+
+      {/* Benefits Banner */}
+      {(freeScriptIds.size > 0 || availableCoupons.length > 0) && (
+        <div className="bg-[#d4920a]/[0.06] border border-[#d4920a]/20 rounded-xl p-4 mb-8 space-y-2">
+          {freeScriptIds.size > 0 && (
+            <div className="flex items-center gap-2 text-sm text-[#e5a312]">
+              <Gift className="w-4 h-4" strokeWidth={1.5} />
+              <span>
+                {lang === "he"
+                  ? `יש לך ${freeScriptIds.size} סקריפט${freeScriptIds.size > 1 ? "ים" : ""} חינם בעגלה!`
+                  : `You have ${freeScriptIds.size} free script${freeScriptIds.size > 1 ? "s" : ""} in your cart!`}
+              </span>
+            </div>
+          )}
+          {availableCoupons.map((c) => (
+            <div key={c.id} className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-[#e5a312]">
+                <Tag className="w-4 h-4" strokeWidth={1.5} />
+                <span>
+                  {lang === "he" ? "יש לך קופון זמין:" : "You have a coupon:"}{" "}
+                  <span className="font-mono font-medium">{c.coupon_code}</span>
+                </span>
+              </div>
+              {!coupon && (
+                <button
+                  onClick={() => c.coupon_code && applyCoupon(c.coupon_code)}
+                  className="text-xs bg-[#d4920a] hover:bg-[#e5a312] text-white px-3 py-1 rounded-lg transition-colors cursor-pointer"
+                >
+                  {lang === "he" ? "הפעל" : "Apply"}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3">
@@ -301,7 +390,7 @@ export default function CheckoutPage() {
                       return actions.order.create({
                         intent: "CAPTURE",
                         purchase_units: [{
-                          amount: { value: String(finalPrice), currency_code: "ILS" },
+                          amount: { value: String(adjustedFinalPrice), currency_code: "ILS" },
                           description: orderDescription,
                         }],
                       });
@@ -364,7 +453,7 @@ export default function CheckoutPage() {
                       {lang === "he" ? "שולח..." : "Sending..."}
                     </>
                   ) : (
-                    <>{t("checkout.submit")} — {"\u20AA"}{finalPrice}</>
+                    <>{t("checkout.submit")} — {"\u20AA"}{adjustedFinalPrice}</>
                   )}
                 </button>
               </div>
@@ -378,8 +467,15 @@ export default function CheckoutPage() {
             <div className="space-y-3 mb-6">
               {items.map((item) => (
                 <div key={item.script.id} className="flex items-center justify-between text-sm">
-                  <span className="text-t-muted">{item.script.displayName}</span>
-                  <span className="text-t-secondary font-medium">{formatPrice(item.script.price)}</span>
+                  <span className="text-t-muted flex items-center gap-1.5">
+                    {freeScriptIds.has(item.script.id) && <Gift className="w-3 h-3 text-[#e5a312]" strokeWidth={1.5} />}
+                    {item.script.displayName}
+                  </span>
+                  {freeScriptIds.has(item.script.id) ? (
+                    <span className="text-[#e5a312] font-medium text-xs">{lang === "he" ? "חינם" : "FREE"}</span>
+                  ) : (
+                    <span className="text-t-secondary font-medium">{formatPrice(item.script.price)}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -395,9 +491,15 @@ export default function CheckoutPage() {
                 </div>
               </>
             )}
-            <div className={`${discountAmount > 0 ? "mt-3" : ""} border-t border-b-subtle pt-4 flex items-center justify-between`}>
+            {freeScriptsDiscount > 0 && (
+              <div className="flex items-center justify-between text-sm text-[#e5a312] mt-2">
+                <span className="flex items-center gap-1"><Gift className="w-3 h-3" strokeWidth={1.5} />{lang === "he" ? "הטבת סקריפטים חינם" : "Free scripts benefit"}</span>
+                <span>-{"\u20AA"}{freeScriptsDiscount}</span>
+              </div>
+            )}
+            <div className={`${discountAmount > 0 || freeScriptsDiscount > 0 ? "mt-3" : ""} border-t border-b-subtle pt-4 flex items-center justify-between`}>
               <span className="text-t-primary font-semibold">{t("cart.total")}</span>
-              <span className="text-t-primary font-semibold">{"\u20AA"}{finalPrice}</span>
+              <span className="text-t-primary font-semibold">{"\u20AA"}{adjustedFinalPrice}</span>
             </div>
           </div>
         </div>
