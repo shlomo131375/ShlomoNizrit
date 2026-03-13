@@ -178,6 +178,14 @@ export default function Header() {
                         <div className="text-xs text-t-muted truncate">{user.user_metadata?.full_name || ""}</div>
                         <div className="text-[11px] text-t-ghost truncate" dir="ltr">{user.email}</div>
                       </div>
+                      <Link
+                        href="/account"
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-t-dim hover:bg-s-hover hover:text-[#e5a312] transition-colors duration-200"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <User className="w-3.5 h-3.5" strokeWidth={1.5} />
+                        {lang === "he" ? "החשבון שלי" : "My Account"}
+                      </Link>
                       <button
                         onClick={() => { signOut(); setUserMenuOpen(false); }}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-t-dim hover:bg-s-hover hover:text-red-400 transition-colors duration-200 cursor-pointer"
