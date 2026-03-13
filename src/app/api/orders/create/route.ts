@@ -163,7 +163,21 @@ Total: ₪${totalAmount}
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: `🛒 הזמנה חדשה!\nלקוח: ${customerName} (${customerEmail})\nתשלום: ${paymentMethod}\nפריטים: ${items.map((i) => i.script_name).join(", ")}\nסה"כ: ₪${totalAmount}`,
+        event: "new_order",
+        customer: {
+          name: customerName,
+          email: customerEmail,
+        },
+        order: {
+          payment_method: paymentMethod,
+          total: totalAmount,
+          currency: "ILS",
+          items: items.map((i) => ({
+            name: i.script_name,
+            price: i.price,
+          })),
+        },
+        timestamp: new Date().toISOString(),
       }),
     }).catch(console.error);
   }
