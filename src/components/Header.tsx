@@ -100,6 +100,14 @@ export default function Header() {
                       <Ticket className="w-3.5 h-3.5" strokeWidth={1.5} />
                       {lang === "he" ? "ניהול קופונים" : "Manage Coupons"}
                     </Link>
+                    <Link
+                      href="/admin/orders"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-t-muted hover:bg-s-hover hover:text-[#e5a312] transition-colors duration-200"
+                      onClick={() => setAdminMenuOpen(false)}
+                    >
+                      <Package className="w-3.5 h-3.5" strokeWidth={1.5} />
+                      {lang === "he" ? "ניהול הזמנות" : "Manage Orders"}
+                    </Link>
                   </div>
                 )}
               </div>
@@ -223,6 +231,12 @@ export default function Header() {
                 </Link>
                 <Link href="/admin/coupons" className="block py-2.5 text-sm text-t-muted hover:text-[#e5a312] transition-colors ps-5" onClick={() => setMenuOpen(false)}>
                   {lang === "he" ? "ניהול קופונים" : "Manage Coupons"}
+                </Link>
+                <Link href="/admin/orders" className="block py-2.5 text-sm text-t-muted hover:text-[#e5a312] transition-colors ps-5" onClick={() => setMenuOpen(false)}>
+                  {lang === "he" ? "ניהול הזמנות" : "Manage Orders"}
+                </Link>
+                <Link href="/admin/users" className="block py-2.5 text-sm text-t-muted hover:text-[#e5a312] transition-colors ps-5" onClick={() => setMenuOpen(false)}>
+                  {lang === "he" ? "ניהול משתמשים" : "Manage Users"}
                 </Link>
               </>
             )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Eye, Tag, Package } from "lucide-react";
+import { Search, Eye, Tag, Package, ShoppingBag, Users } from "lucide-react";
 import { useScripts } from "@/lib/scriptsContext";
 import Link from "next/link";
 
@@ -65,6 +65,20 @@ export default function AdminPage() {
         >
           <Tag className="w-4 h-4 text-[#e5a312]" strokeWidth={1.5} />
           ניהול קופונים
+        </Link>
+        <Link
+          href="/admin/orders"
+          className="inline-flex items-center gap-2 bg-s-base border border-b-subtle hover:border-[#d4920a]/30 rounded-xl px-5 py-3 text-sm text-t-secondary transition-all duration-300"
+        >
+          <ShoppingBag className="w-4 h-4 text-[#e5a312]" strokeWidth={1.5} />
+          ניהול הזמנות
+        </Link>
+        <Link
+          href="/admin/users"
+          className="inline-flex items-center gap-2 bg-s-base border border-b-subtle hover:border-[#d4920a]/30 rounded-xl px-5 py-3 text-sm text-t-secondary transition-all duration-300"
+        >
+          <Users className="w-4 h-4 text-[#e5a312]" strokeWidth={1.5} />
+          ניהול משתמשים
         </Link>
       </div>
 

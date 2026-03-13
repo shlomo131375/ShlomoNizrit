@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase-server";
+import { sanitizeInput, isValidEmail } from "@/lib/sanitize";
+import { rateLimit } from "@/lib/rateLimit";
 
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET || "";
 const PAYPAL_API = "https://api-m.paypal.com";
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "";
 
 interface OrderItem {
   script_id: string;
@@ -42,6 +43,13 @@ async function verifyPayPalPayment(orderId: string): Promise<{ verified: boolean
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting - max 5 orders per minute per IP
+    const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+    const { allowed } = rateLimit(ip, { maxRequests: 5, windowMs: 60_000 });
+    if (!allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
     const body = await request.json();
     const {
       paypal_order_id,
@@ -67,10 +75,19 @@ export async function POST(request: NextRequest) {
       coupon_code?: string;
     };
 
-    // Validate required fields
+    // Validate and sanitize inputs
     if (!user_email || !items || items.length === 0) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+
+    if (!isValidEmail(user_email)) {
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+    }
+
+    // Sanitize text inputs
+    const cleanName = sanitizeInput(user_name || "");
+    const cleanPhone = sanitizeInput(user_phone || "");
+    const cleanCoupon = coupon_code ? sanitizeInput(coupon_code) : null;
 
     // For PayPal orders, verify the payment
     let paymentStatus = "pending";
@@ -87,16 +104,16 @@ export async function POST(request: NextRequest) {
       .from("orders")
       .insert({
         user_id,
-        user_email,
-        user_name,
-        user_phone,
+        user_email: user_email.trim(),
+        user_name: cleanName,
+        user_phone: cleanPhone,
         paypal_order_id: paypal_order_id || null,
         payment_method,
         payment_status: paymentStatus,
         items: JSON.stringify(items),
         total_amount,
         discount_amount: discount_amount || 0,
-        coupon_code: coupon_code || null,
+        coupon_code: cleanCoupon,
       })
       .select("id, download_token")
       .single();
