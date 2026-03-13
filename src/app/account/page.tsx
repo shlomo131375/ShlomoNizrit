@@ -103,6 +103,11 @@ export default function AccountPage() {
             {isHe ? "שלום" : "Hello"}, {user.user_metadata?.full_name || user.email?.split("@")[0]}
           </h1>
           <p className="text-sm text-t-ghost" dir="ltr">{user.email}</p>
+          {(user.user_metadata?.country || user.user_metadata?.city) && (
+            <p className="text-xs text-t-ghost mt-0.5">
+              {[user.user_metadata?.city, user.user_metadata?.country].filter(Boolean).join(", ")}
+            </p>
+          )}
         </div>
       </div>
 

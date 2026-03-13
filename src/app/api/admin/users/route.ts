@@ -34,6 +34,8 @@ export async function GET(req: Request) {
     email: u.email,
     name: u.user_metadata?.full_name || "",
     avatar: u.user_metadata?.avatar_url || "",
+    country: u.user_metadata?.country || "",
+    city: u.user_metadata?.city || "",
     provider: u.app_metadata?.provider || "email",
     created_at: u.created_at,
     last_sign_in: u.last_sign_in_at,

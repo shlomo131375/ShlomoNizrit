@@ -15,6 +15,8 @@ export default function LoginPage() {
 
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
   const [name, setName] = useState("");
+  const [country, setCountry] = useState("");
+  const [city, setCity] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -78,7 +80,7 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      const { error } = await signUpWithEmail(email, password, name);
+      const { error } = await signUpWithEmail(email, password, name, country, city);
       if (error) {
         setError(
           lang === "he"
@@ -244,6 +246,7 @@ export default function LoginPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         {mode === "register" && (
+          <>
           <div>
             <label className="block text-xs text-t-faint mb-1.5">
               {lang === "he" ? "שם מלא" : "Full Name"}
@@ -257,6 +260,35 @@ export default function LoginPage() {
               placeholder={lang === "he" ? "השם שלך" : "Your name"}
             />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-t-faint mb-1.5">
+                {lang === "he" ? "מדינה" : "Country"}
+              </label>
+              <input
+                type="text"
+                required
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="w-full bg-s-input border border-b-medium rounded-xl px-4 py-3 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors duration-300"
+                placeholder={lang === "he" ? "ישראל" : "Israel"}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-t-faint mb-1.5">
+                {lang === "he" ? "עיר" : "City"}
+              </label>
+              <input
+                type="text"
+                required
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="w-full bg-s-input border border-b-medium rounded-xl px-4 py-3 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors duration-300"
+                placeholder={lang === "he" ? "תל אביב" : "Tel Aviv"}
+              />
+            </div>
+          </div>
+          </>
         )}
 
         <div>

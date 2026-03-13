@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Users, ArrowRight, Gift, Tag, ChevronDown, X, Search, Check, Mail, Calendar, LogIn } from "lucide-react";
+import { Plus, Trash2, Users, ArrowRight, Gift, Tag, ChevronDown, X, Search, Check, Mail, Calendar, LogIn, MapPin } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useScripts } from "@/lib/scriptsContext";
 import Link from "next/link";
@@ -11,6 +11,8 @@ interface AuthUser {
   email: string;
   name: string;
   avatar: string;
+  country: string;
+  city: string;
   provider: string;
   created_at: string;
   last_sign_in: string | null;
@@ -262,6 +264,12 @@ export default function AdminUsersPage() {
                         }`}>
                           {user.provider === "google" ? "Google" : "Email"}
                         </span>
+                        {(user.country || user.city) && (
+                          <span className="text-[10px] text-t-ghost flex items-center gap-1">
+                            <MapPin className="w-3 h-3" strokeWidth={1.5} />
+                            {[user.city, user.country].filter(Boolean).join(", ")}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
