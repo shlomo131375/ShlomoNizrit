@@ -10,7 +10,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    const { name, email, message } = await request.json();
+    const { name, email, message, website } = await request.json();
+
+    // Honeypot: if filled, it's a bot
+    if (website) {
+      return NextResponse.json({ success: true });
+    }
 
     if (!name || !email || !message) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

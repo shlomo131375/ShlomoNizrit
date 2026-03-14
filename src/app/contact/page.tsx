@@ -8,7 +8,7 @@ export default function ContactPage() {
   const { t, lang } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", message: "", website: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,6 +127,17 @@ export default function ContactPage() {
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   className="w-full bg-s-input border border-b-medium rounded-xl px-4 py-3 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors duration-300 resize-none"
                   placeholder={t("contact.messagePlaceholder")}
+                />
+              </div>
+              {/* Honeypot - hidden from real users, bots fill it */}
+              <div className="absolute opacity-0 -z-10" aria-hidden="true">
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={form.website}
+                  onChange={(e) => setForm({ ...form, website: e.target.value })}
                 />
               </div>
               <button
