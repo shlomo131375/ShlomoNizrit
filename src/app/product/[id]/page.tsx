@@ -2,11 +2,74 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowLeft, ShoppingCart, Check, Download, Play, Package } from "lucide-react";
+import { ArrowRight, ArrowLeft, ShoppingCart, Check, Download, Play, Package, BookOpen } from "lucide-react";
 import { useScripts } from "@/lib/scriptsContext";
 import { useCart } from "@/lib/cartContext";
 import { useLanguage } from "@/lib/languageContext";
 import ScriptCard from "@/components/ScriptCard";
+import type { GuideBlock } from "@/data/scripts";
+
+function GuideRenderer({ blocks, lang }: { blocks: GuideBlock[]; lang: string }) {
+  if (!blocks || blocks.length === 0) return null;
+
+  return (
+    <div className="mt-10 pt-8 border-t border-b-subtle">
+      <h2 className="flex items-center gap-2 text-lg font-semibold text-t-primary mb-6 tracking-tight">
+        <BookOpen className="w-5 h-5 text-[#e5a312]" strokeWidth={1.5} />
+        {lang === "he" ? "מדריך שימוש" : "User Guide"}
+      </h2>
+      <div className="space-y-5">
+        {blocks.map((block, i) => {
+          switch (block.type) {
+            case "heading":
+              return (
+                <h3 key={i} className="text-base font-semibold text-t-primary mt-6 first:mt-0">
+                  {block.content}
+                </h3>
+              );
+            case "text":
+              return (
+                <p key={i} className="text-sm text-t-muted leading-relaxed whitespace-pre-line">
+                  {block.content}
+                </p>
+              );
+            case "image":
+              return (
+                <figure key={i} className="rounded-xl overflow-hidden border border-b-subtle">
+                  <img
+                    src={block.imageUrl}
+                    alt={block.content || ""}
+                    className="w-full object-contain"
+                    loading="lazy"
+                  />
+                  {block.content && (
+                    <figcaption className="text-xs text-t-ghost text-center py-2 bg-s-base">
+                      {block.content}
+                    </figcaption>
+                  )}
+                </figure>
+              );
+            case "list":
+              return (
+                <ul key={i} className="space-y-2 pr-1">
+                  {(block.items || []).map((item, j) => (
+                    <li key={j} className="flex items-start gap-2 text-sm text-t-muted">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#d4920a]/50 mt-1.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              );
+            case "divider":
+              return <hr key={i} className="border-b-subtle" />;
+            default:
+              return null;
+          }
+        })}
+      </div>
+    </div>
+  );
+}
 
 function getYoutubeEmbedUrl(url: string): string | null {
   try {
@@ -160,6 +223,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               ))}
             </div>
           </div>
+
+          {/* Guide */}
+          {script.guide && script.guide.length > 0 && (
+            <GuideRenderer blocks={script.guide} lang={lang} />
+          )}
         </div>
 
         {/* Sidebar */}

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { supabase } from "./supabase";
-import type { Script } from "@/data/scripts";
+import type { Script, GuideBlock } from "@/data/scripts";
 import { scripts as staticScripts, categories as staticCategories, formatPrice, getScriptsByCategory } from "@/data/scripts";
 
 interface ScriptsContextType {
@@ -34,6 +34,7 @@ function dbToScript(row: Record<string, unknown>): Script {
     icon: (row.icon as string) || null,
     videoUrl: (row.video_url as string) || null,
     videos: videos.sort((a, b) => a.sort_order - b.sort_order),
+    guide: Array.isArray(row.guide) ? row.guide as GuideBlock[] : [],
   };
 }
 
@@ -50,6 +51,7 @@ function scriptToDb(script: Partial<Script> & { id?: string }) {
   if (script.icon !== undefined) db.icon = script.icon;
   if (script.videoUrl !== undefined) db.video_url = script.videoUrl;
   if (script.videos !== undefined) db.videos = script.videos;
+  if (script.guide !== undefined) db.guide = script.guide;
   return db;
 }
 
@@ -61,7 +63,7 @@ export function ScriptsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("scripts")
-      .select("id, script_name, display_name, description, category, price, version, icon, video_url, videos, sort_order")
+      .select("id, script_name, display_name, description, category, price, version, icon, video_url, videos, guide, sort_order")
       .eq("active", true)
       .order("sort_order", { ascending: true });
 

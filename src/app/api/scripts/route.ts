@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       icon,
       video_url,
       videos,
+      guide,
       sort_order,
     } = body;
 
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
       icon: icon || null,
       video_url: video_url || null,
       videos: videos || [],
+      guide: guide || [],
       sort_order: sort_order ?? 0,
       active: true,
     };

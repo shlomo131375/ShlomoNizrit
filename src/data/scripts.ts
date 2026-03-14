@@ -5,6 +5,13 @@ export interface VideoItem {
   is_main: boolean;
 }
 
+export interface GuideBlock {
+  type: "heading" | "text" | "image" | "list" | "divider";
+  content: string;
+  imageUrl?: string;
+  items?: string[];
+}
+
 export interface Script {
   id: string;
   scriptName: string;
@@ -17,6 +24,7 @@ export interface Script {
   icon: string | null;
   videoUrl: string | null;
   videos?: VideoItem[];
+  guide?: GuideBlock[];
 }
 
 export const categories = [

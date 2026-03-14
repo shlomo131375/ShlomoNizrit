@@ -100,7 +100,7 @@ export default function ContactPage() {
               <p className="text-sm text-t-dim">{t("contact.sentDesc")}</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form method="POST" onSubmit={handleSubmit} className="space-y-4">
               {[
                 { label: t("contact.name"), key: "name" as const, type: "text", placeholder: t("contact.namePlaceholder") },
                 { label: t("contact.emailLabel"), key: "email" as const, type: "email", placeholder: t("contact.emailPlaceholder") },

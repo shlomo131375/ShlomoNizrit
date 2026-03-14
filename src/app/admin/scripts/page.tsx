@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Plus, Trash2, ArrowRight, Pencil, Search, Eye, ChevronDown, Play, Star } from "lucide-react";
+import { Plus, Trash2, ArrowRight, Pencil, Search, Eye, ChevronDown, Play, Star, Type, AlignRight, ImageIcon, List, Minus, ChevronUp, BookOpen } from "lucide-react";
 import { useScripts } from "@/lib/scriptsContext";
 import Link from "next/link";
-import type { Script } from "@/data/scripts";
+import type { Script, GuideBlock } from "@/data/scripts";
 
 const CATEGORIES = ["עימוד", "ניווט", "ייצוא", "עיצוב"];
 
@@ -27,6 +27,7 @@ interface FormData {
   downloadUrl: string;
   videoUrl: string;
   videos: FormVideo[];
+  guide: GuideBlock[];
 }
 
 const emptyForm: FormData = {
@@ -41,6 +42,7 @@ const emptyForm: FormData = {
   downloadUrl: "",
   videoUrl: "",
   videos: [],
+  guide: [],
 };
 
 export default function AdminScriptsPage() {
@@ -90,6 +92,7 @@ export default function AdminScriptsPage() {
       downloadUrl: script.downloadUrl,
       videoUrl: script.videoUrl || "",
       videos: script.videos || [],
+      guide: script.guide || [],
     });
     setError("");
     setShowForm(true);
@@ -111,6 +114,7 @@ export default function AdminScriptsPage() {
       icon: null,
       videoUrl: form.videoUrl.trim() || null,
       videos: form.videos.filter((v) => v.url.trim()),
+      guide: form.guide.filter((b) => b.type === "divider" || b.content?.trim() || b.imageUrl?.trim() || (b.items && b.items.length > 0)),
     };
 
     if (editingId) {
@@ -422,6 +426,197 @@ export default function AdminScriptsPage() {
             </div>
           </div>
 
+          {/* Guide Editor */}
+          <div className="border-t border-b-subtle pt-5 mt-2">
+            <div className="flex items-center justify-between mb-3">
+              <label className="flex items-center gap-2 text-xs text-t-faint">
+                <BookOpen className="w-3.5 h-3.5" strokeWidth={1.5} />
+                מדריך שימוש ({form.guide.length} בלוקים)
+              </label>
+              <div className="flex gap-1">
+                {([
+                  { type: "heading" as const, icon: Type, label: "כותרת" },
+                  { type: "text" as const, icon: AlignRight, label: "טקסט" },
+                  { type: "image" as const, icon: ImageIcon, label: "תמונה" },
+                  { type: "list" as const, icon: List, label: "רשימה" },
+                  { type: "divider" as const, icon: Minus, label: "מפריד" },
+                ]).map(({ type, icon: Icon, label }) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => {
+                      const newBlock: GuideBlock = {
+                        type,
+                        content: "",
+                        ...(type === "list" ? { items: [""] } : {}),
+                      };
+                      setForm((prev) => ({ ...prev, guide: [...prev.guide, newBlock] }));
+                    }}
+                    className="flex items-center gap-1 text-[11px] text-t-ghost hover:text-[#e5a312] transition-colors cursor-pointer px-2 py-1.5 rounded-lg hover:bg-s-hover"
+                    title={label}
+                  >
+                    <Icon className="w-3 h-3" strokeWidth={1.5} />
+                    <span className="hidden sm:inline">{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {form.guide.length > 0 && (
+              <div className="space-y-2">
+                {form.guide.map((block, idx) => (
+                  <div key={idx} className="bg-s-hover/50 rounded-lg p-3 group">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] text-t-ghost uppercase tracking-wider w-14">
+                        {block.type === "heading" ? "כותרת" : block.type === "text" ? "טקסט" : block.type === "image" ? "תמונה" : block.type === "list" ? "רשימה" : "מפריד"}
+                      </span>
+                      <div className="flex-1" />
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => {
+                          const g = [...form.guide];
+                          [g[idx - 1], g[idx]] = [g[idx], g[idx - 1]];
+                          setForm((prev) => ({ ...prev, guide: g }));
+                        }}
+                        className="text-t-ghost hover:text-t-muted transition-colors cursor-pointer p-1 disabled:opacity-20"
+                      >
+                        <ChevronUp className="w-3 h-3" strokeWidth={1.5} />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === form.guide.length - 1}
+                        onClick={() => {
+                          const g = [...form.guide];
+                          [g[idx], g[idx + 1]] = [g[idx + 1], g[idx]];
+                          setForm((prev) => ({ ...prev, guide: g }));
+                        }}
+                        className="text-t-ghost hover:text-t-muted transition-colors cursor-pointer p-1 disabled:opacity-20"
+                      >
+                        <ChevronDown className="w-3 h-3" strokeWidth={1.5} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, guide: prev.guide.filter((_, i) => i !== idx) }))}
+                        className="text-t-ghost hover:text-red-400 transition-colors cursor-pointer p-1"
+                      >
+                        <Trash2 className="w-3 h-3" strokeWidth={1.5} />
+                      </button>
+                    </div>
+
+                    {block.type === "heading" && (
+                      <input
+                        type="text"
+                        value={block.content}
+                        onChange={(e) => {
+                          const g = [...form.guide];
+                          g[idx] = { ...g[idx], content: e.target.value };
+                          setForm((prev) => ({ ...prev, guide: g }));
+                        }}
+                        placeholder="כותרת..."
+                        className="w-full bg-s-input border border-b-medium rounded-lg px-3 py-2 text-sm font-semibold text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+                      />
+                    )}
+
+                    {block.type === "text" && (
+                      <textarea
+                        value={block.content}
+                        onChange={(e) => {
+                          const g = [...form.guide];
+                          g[idx] = { ...g[idx], content: e.target.value };
+                          setForm((prev) => ({ ...prev, guide: g }));
+                        }}
+                        placeholder="טקסט..."
+                        rows={3}
+                        className="w-full bg-s-input border border-b-medium rounded-lg px-3 py-2 text-sm text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors resize-none"
+                      />
+                    )}
+
+                    {block.type === "image" && (
+                      <div className="space-y-2">
+                        <input
+                          type="url"
+                          value={block.imageUrl || ""}
+                          onChange={(e) => {
+                            const g = [...form.guide];
+                            g[idx] = { ...g[idx], imageUrl: e.target.value };
+                            setForm((prev) => ({ ...prev, guide: g }));
+                          }}
+                          placeholder="קישור לתמונה (URL)..."
+                          className="w-full bg-s-input border border-b-medium rounded-lg px-3 py-2 text-xs text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+                          dir="ltr"
+                        />
+                        <input
+                          type="text"
+                          value={block.content}
+                          onChange={(e) => {
+                            const g = [...form.guide];
+                            g[idx] = { ...g[idx], content: e.target.value };
+                            setForm((prev) => ({ ...prev, guide: g }));
+                          }}
+                          placeholder="כיתוב תמונה (אופציונלי)..."
+                          className="w-full bg-s-input border border-b-medium rounded-lg px-3 py-2 text-xs text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+                        />
+                      </div>
+                    )}
+
+                    {block.type === "list" && (
+                      <div className="space-y-1.5">
+                        {(block.items || []).map((item, j) => (
+                          <div key={j} className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#d4920a]/40 shrink-0" />
+                            <input
+                              type="text"
+                              value={item}
+                              onChange={(e) => {
+                                const g = [...form.guide];
+                                const items = [...(g[idx].items || [])];
+                                items[j] = e.target.value;
+                                g[idx] = { ...g[idx], items };
+                                setForm((prev) => ({ ...prev, guide: g }));
+                              }}
+                              placeholder="פריט..."
+                              className="flex-1 bg-s-input border border-b-medium rounded-lg px-3 py-1.5 text-xs text-t-primary placeholder-t-ghost focus:outline-none focus:border-[#d4920a]/30 transition-colors"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const g = [...form.guide];
+                                const items = (g[idx].items || []).filter((_, i) => i !== j);
+                                g[idx] = { ...g[idx], items };
+                                setForm((prev) => ({ ...prev, guide: g }));
+                              }}
+                              className="text-t-ghost hover:text-red-400 transition-colors cursor-pointer p-1"
+                            >
+                              <Trash2 className="w-3 h-3" strokeWidth={1.5} />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const g = [...form.guide];
+                            const items = [...(g[idx].items || []), ""];
+                            g[idx] = { ...g[idx], items };
+                            setForm((prev) => ({ ...prev, guide: g }));
+                          }}
+                          className="flex items-center gap-1 text-[11px] text-[#e5a312] hover:text-[#fdc43f] transition-colors cursor-pointer mt-1"
+                        >
+                          <Plus className="w-3 h-3" strokeWidth={1.5} />
+                          הוסף פריט
+                        </button>
+                      </div>
+                    )}
+
+                    {block.type === "divider" && (
+                      <hr className="border-b-subtle" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           <div className="flex gap-3 pt-2">
@@ -490,6 +685,11 @@ export default function AdminScriptsPage() {
                           <span className="flex items-center gap-1 text-[10px] text-t-ghost">
                             <Play className="w-3 h-3" strokeWidth={1.5} />
                             {script.videos && script.videos.length > 0 ? script.videos.length : 1}
+                          </span>
+                        )}
+                        {script.guide && script.guide.length > 0 && (
+                          <span className="flex items-center gap-1 text-[10px] text-t-ghost">
+                            <BookOpen className="w-3 h-3" strokeWidth={1.5} />
                           </span>
                         )}
                       </div>
