@@ -37,8 +37,8 @@ const translations: Record<string, Record<Language, string>> = {
   "home.timeSavingDesc": { he: "אוטומציה של משימות חוזרות. מה שלוקח שעות, ייקח שניות.", en: "Automation of repetitive tasks. What takes hours, takes seconds." },
   "home.fromField": { he: "מהשטח", en: "Field Tested" },
   "home.fromFieldDesc": { he: "כל סקריפט נבנה מתוך ניסיון אמיתי בעבודת עימוד יומיומית.", en: "Every script is built from real daily typesetting experience." },
-  "home.licensing": { he: "רישוי ותמיכה", en: "Licensing & Support" },
-  "home.licensingDesc": { he: "מערכת רישוי מאובטחת, עדכונים שוטפים ותמיכה אישית.", en: "Secure licensing system, regular updates and personal support." },
+  "home.licensing": { he: "תמיכה", en: "Support" },
+  "home.licensingDesc": { he: "תמיכה ועדכונים שוטפים.", en: "Support and regular updates." },
   "home.ctaTitle": { he: "מוכן לייעל את העבודה?", en: "Ready to Boost Productivity?" },
   "home.ctaSubtitle": { he: "הצטרף למעצבים שכבר חוסכים שעות עבודה", en: "Join designers who already save hours of work" },
   "home.ctaButton": { he: "לסקריפטים", en: "View Scripts" },
@@ -114,10 +114,10 @@ const translations: Record<string, Record<Language, string>> = {
   "checkout.backToSite": { he: "חזרה לאתר", en: "Back to Site" },
 
   // About
-  "about.title": { he: "Shlomo Nizrit Scripts", en: "Shlomo Nizrit Scripts" },
+  "about.title": { he: "Shlomo Nizrit", en: "Shlomo Nizrit" },
   "about.subtitle": { he: "סקריפטים מקצועיים לאדובי אינדיזיין, שנוצרו מתוך צורך אמיתי בעבודה יומיומית", en: "Professional Adobe InDesign scripts, born from real daily workflow needs" },
   "about.story": { he: "הסיפור", en: "The Story" },
-  "about.story1": { he: "Shlomo Nizrit Scripts נולד מתוך עבודת עימוד יומיומית. כמעצב גרפי שעובד עם אדובי אינדיזיין, נתקלתי שוב ושוב במשימות חוזרות ומעייפות — החלפת סגנונות, ניווט במסמכים ארוכים, ייצוא מרובה, ועוד.", en: "Shlomo Nizrit Scripts was born from daily typesetting work. As a graphic designer working with Adobe InDesign, I kept encountering repetitive, tedious tasks — replacing styles, navigating long documents, multiple exports, and more." },
+  "about.story1": { he: "Shlomo Nizrit נולד מתוך עבודת עימוד יומיומית. כמעצב גרפי שעובד עם אדובי אינדיזיין, נתקלתי שוב ושוב במשימות חוזרות ומעייפות — החלפת סגנונות, ניווט במסמכים ארוכים, ייצוא מרובה, ועוד.", en: "Shlomo Nizrit was born from daily typesetting work. As a graphic designer working with Adobe InDesign, I kept encountering repetitive, tedious tasks — replacing styles, navigating long documents, multiple exports, and more." },
   "about.story2": { he: "במקום להמשיך לבזבז זמן, החלטתי לכתוב סקריפטים שיעשו את העבודה בשבילי. מהר מאוד הבנתי שגם מעצבים אחרים סובלים מאותן בעיות — וככה נולד הפרויקט.", en: "Instead of continuing to waste time, I decided to write scripts to do the work for me. I quickly realized that other designers suffer from the same problems — and that's how the project was born." },
   "about.story3": { he: "כל סקריפט נבנה בקפידה, עם ממשק משתמש ברור בעברית, ועם גמישות מירבית כדי להתאים לכמה שיותר תרחישי עבודה.", en: "Every script is carefully built, with a clear Hebrew user interface, and maximum flexibility to fit as many workflow scenarios as possible." },
   "about.statsScripts": { he: "סקריפטים", en: "Scripts" },

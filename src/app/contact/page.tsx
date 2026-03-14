@@ -7,11 +7,24 @@ import { useLanguage } from "@/lib/languageContext";
 export default function ContactPage() {
   const { t, lang } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSending(true);
+    try {
+      await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      setSubmitted(true);
+    } catch {
+      alert(lang === "he" ? "שגיאה בשליחה, נסה שוב" : "Error sending, please try again");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -118,9 +131,10 @@ export default function ContactPage() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-[#d4920a] hover:bg-[#e5a312] text-white py-3.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer"
+                disabled={sending}
+                className="w-full bg-[#d4920a] hover:bg-[#e5a312] disabled:opacity-60 text-white py-3.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer"
               >
-                {t("contact.send")}
+                {sending ? (lang === "he" ? "שולח..." : "Sending...") : t("contact.send")}
               </button>
             </form>
           )}

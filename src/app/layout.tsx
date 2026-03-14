@@ -10,7 +10,7 @@ import { AuthProvider } from "@/lib/authContext";
 import { ScriptsProvider } from "@/lib/scriptsContext";
 
 export const metadata: Metadata = {
-  title: "Shlomo Nizrit Scripts | סקריפטים מקצועיים לאינדיזיין",
+  title: "Shlomo Nizrit | סקריפטים מקצועיים לאינדיזיין",
   description:
     "סקריפטים מקצועיים לאדובי אינדיזיין — עימוד, ניווט, ייצוא ועיצוב. חסכו שעות עבודה עם כלים אוטומטיים.",
 };

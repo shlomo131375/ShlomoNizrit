@@ -127,11 +127,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     >
                       <Play className="w-3 h-3" strokeWidth={1.5} />
                       {video.title || `${lang === "he" ? "סרטון" : "Video"} ${index + 1}`}
-                      {video.is_main && (
-                        <span className="text-[9px] bg-[#d4920a]/20 text-[#e5a312] px-1.5 py-0.5 rounded-full">
-                          {lang === "he" ? "ראשי" : "Main"}
-                        </span>
-                      )}
                     </button>
                   ))}
                 </div>
@@ -154,7 +149,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <h2 className="text-[11px] font-medium text-t-dim uppercase tracking-wider mb-4">{t("product.details")}</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: t("product.file"), value: script.scriptName },
                 { label: t("product.version"), value: script.version },
                 { label: t("product.category"), value: t(`cat.${script.category}`) },
                 { label: t("product.compatibility"), value: "InDesign 18+" },

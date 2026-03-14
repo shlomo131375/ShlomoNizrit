@@ -1,13 +1,51 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Eye, Tag, Package, ShoppingBag, Users } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Eye, Tag, Package, ShoppingBag, Users, Wrench, Moon } from "lucide-react";
 import { useScripts } from "@/lib/scriptsContext";
+import { useAuth } from "@/lib/authContext";
 import Link from "next/link";
 
 export default function AdminPage() {
   const { scripts, formatPrice } = useScripts();
+  const { session } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [shabbatMode, setShabbatMode] = useState(false);
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/site-mode")
+      .then((r) => r.json())
+      .then((data) => {
+        setMaintenanceMode(data.maintenance_mode);
+        setShabbatMode(data.shabbat_mode);
+      })
+      .catch(console.error);
+  }, []);
+
+  const toggleMode = useCallback(async (mode: string, enabled: boolean) => {
+    setToggling(mode);
+    try {
+      const token = session?.access_token;
+      const res = await fetch("/api/site-mode", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ mode, enabled }),
+      });
+      if (res.ok) {
+        if (mode === "maintenance_mode") setMaintenanceMode(enabled);
+        if (mode === "shabbat_mode") setShabbatMode(enabled);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setToggling(null);
+    }
+  }, [session]);
 
   const totalValue = scripts.reduce((sum, s) => sum + (s.price === "free" ? 0 : s.price), 0);
   const paidScripts = scripts.filter((s) => s.price !== "free");
@@ -80,6 +118,56 @@ export default function AdminPage() {
           <Users className="w-4 h-4 text-[#e5a312]" strokeWidth={1.5} />
           ניהול משתמשים
         </Link>
+      </div>
+
+      {/* Site Mode Toggles */}
+      <div className="bg-s-base border border-b-subtle rounded-xl p-6 mb-10">
+        <h2 className="text-[11px] font-medium text-t-dim uppercase tracking-wider mb-4">מצב האתר</h2>
+        <div className="flex flex-wrap gap-4">
+          <button
+            onClick={() => toggleMode("maintenance_mode", !maintenanceMode)}
+            disabled={toggling === "maintenance_mode"}
+            className={`flex items-center gap-3 rounded-xl px-5 py-3.5 border transition-all duration-300 cursor-pointer ${
+              maintenanceMode
+                ? "border-orange-500/40 bg-orange-500/10 text-orange-400"
+                : "border-b-medium bg-s-input text-t-secondary hover:border-t-ghost"
+            }`}
+          >
+            <Wrench className="w-4 h-4" strokeWidth={1.5} />
+            <span className="text-sm font-medium">
+              {toggling === "maintenance_mode" ? "..." : maintenanceMode ? "תחזוקה פעילה" : "מצב תחזוקה"}
+            </span>
+            <div className={`w-9 h-5 rounded-full transition-colors duration-300 relative ${
+              maintenanceMode ? "bg-orange-500" : "bg-s-hover"
+            }`}>
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300 ${
+                maintenanceMode ? "right-0.5" : "right-4"
+              }`} />
+            </div>
+          </button>
+
+          <button
+            onClick={() => toggleMode("shabbat_mode", !shabbatMode)}
+            disabled={toggling === "shabbat_mode"}
+            className={`flex items-center gap-3 rounded-xl px-5 py-3.5 border transition-all duration-300 cursor-pointer ${
+              shabbatMode
+                ? "border-blue-500/40 bg-blue-500/10 text-blue-400"
+                : "border-b-medium bg-s-input text-t-secondary hover:border-t-ghost"
+            }`}
+          >
+            <Moon className="w-4 h-4" strokeWidth={1.5} />
+            <span className="text-sm font-medium">
+              {toggling === "shabbat_mode" ? "..." : shabbatMode ? "שבת/חג פעיל" : "מצב שבת/חג"}
+            </span>
+            <div className={`w-9 h-5 rounded-full transition-colors duration-300 relative ${
+              shabbatMode ? "bg-blue-500" : "bg-s-hover"
+            }`}>
+              <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300 ${
+                shabbatMode ? "right-0.5" : "right-4"
+              }`} />
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Categories */}

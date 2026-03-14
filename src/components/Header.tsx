@@ -50,7 +50,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-3 group">
             <Logo size={32} />
             <span className="text-[15px] font-semibold text-t-primary tracking-tight">
-              Shlomo Nizrit Scripts
+              Shlomo Nizrit
             </span>
           </Link>
 

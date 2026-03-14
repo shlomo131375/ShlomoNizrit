@@ -482,14 +482,14 @@ export default function CheckoutPage() {
               <div className="bg-s-base border border-b-subtle rounded-xl p-5 space-y-4">
                 <p className="text-sm text-t-dim text-center">
                   {lang === "he"
-                    ? "שלח הזמנה ונחזור אליך עם פרטי תשלום, או צור קשר ישירות:"
-                    : "Submit your order and we'll contact you, or reach out directly:"}
+                    ? "צור קשר ישירות לתיאום תשלום:"
+                    : "Contact us directly to arrange payment:"}
                 </p>
 
                 <div className="flex gap-3">
                   <a
                     href={`https://wa.me/9720504669926?text=${encodeURIComponent(
-                      `שלום, אני מעוניין לרכוש:\n${items.map((i) => `- ${i.script.displayName}`).join("\n")}\nסה"כ: ₪${finalPrice}`
+                      `שלום, אני מעוניין לרכוש:\n${items.map((i) => `- ${i.script.displayName}`).join("\n")}\nסה"כ: ₪${finalPrice}\n\nשם: ${form.name}\nאימייל: ${form.email}\nטלפון: ${form.phone}`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -512,21 +512,6 @@ export default function CheckoutPage() {
                     {lang === "he" ? "אימייל" : "Email"}
                   </a>
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={processing}
-                  className="w-full bg-[#d4920a] hover:bg-[#e5a312] disabled:opacity-60 text-white py-3.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  {processing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      {lang === "he" ? "שולח..." : "Sending..."}
-                    </>
-                  ) : (
-                    <>{t("checkout.submit")} — {"\u20AA"}{adjustedFinalPrice}</>
-                  )}
-                </button>
               </div>
             )}
           </form>

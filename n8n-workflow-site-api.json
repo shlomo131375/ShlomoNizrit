@@ -1,0 +1,719 @@
+{
+  "name": "Script Hub - Site Management API",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Script Hub - Site Management API\n\nכל פעולה מתחילה מטריגר ידני משלה.\nלחץ על הטריגר של הפעולה הרצויה והפעל.\n\nלפני השימוש:\n1. שנה את base_url בכל נוד הגדרות לדומיין שלך\n2. מלא את הפרמטרים הרלוונטיים\n\nקטגוריות: עימוד, ניווט, ייצוא, עיצוב",
+        "height": 300,
+        "width": 350
+      },
+      "id": "a1000000-0000-0000-0000-000000000001",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 100]
+    },
+    {
+      "parameters": {
+        "content": "## רשימת כל הסקריפטים\nGET /api/scripts\nמחזיר את כל הסקריפטים הפעילים",
+        "height": 100,
+        "width": 400,
+        "color": 4
+      },
+      "id": "a1000000-0000-0000-0000-000000000010",
+      "name": "Sticky Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [400, -20]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000002",
+      "name": "Start - List Scripts",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [440, 120]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://shlomonizrit.com/api/scripts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000003",
+      "name": "GET All Scripts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 120]
+    },
+    {
+      "parameters": {
+        "content": "## סקריפט בודד\nGET /api/scripts?id=xxx\nשנה את script_id בנוד Set",
+        "height": 100,
+        "width": 400,
+        "color": 4
+      },
+      "id": "a1000000-0000-0000-0000-000000000011",
+      "name": "Sticky Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [400, 250]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000004",
+      "name": "Start - Get Script",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [440, 380]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a2000001",
+              "name": "script_id",
+              "value": "rav-text",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000005",
+      "name": "Set Script ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [660, 380]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://shlomonizrit.com/api/scripts?id={{ $json.script_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000006",
+      "name": "GET Single Script",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 380]
+    },
+    {
+      "parameters": {
+        "content": "## הוספת סקריפט חדש\nPOST /api/scripts\nמלא את כל השדות בנוד Set\nשדות חובה: script_name, display_name, description, category, download_url\nprice ריק = חינם",
+        "height": 130,
+        "width": 660,
+        "color": 5
+      },
+      "id": "a1000000-0000-0000-0000-000000000012",
+      "name": "Sticky Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [400, 510]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000007",
+      "name": "Start - Create Script",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [440, 680]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a3000001",
+              "name": "script_name",
+              "value": "script-name.jsx",
+              "type": "string"
+            },
+            {
+              "id": "a3000002",
+              "name": "display_name",
+              "value": "Script Display Name",
+              "type": "string"
+            },
+            {
+              "id": "a3000003",
+              "name": "description",
+              "value": "Script description here",
+              "type": "string"
+            },
+            {
+              "id": "a3000004",
+              "name": "category",
+              "value": "עימוד",
+              "type": "string"
+            },
+            {
+              "id": "a3000005",
+              "name": "price",
+              "value": "49",
+              "type": "number"
+            },
+            {
+              "id": "a3000006",
+              "name": "version",
+              "value": "1.0.1",
+              "type": "string"
+            },
+            {
+              "id": "a3000007",
+              "name": "download_url",
+              "value": "https://drive.google.com/uc?export=download&id=YOUR_FILE_ID",
+              "type": "string"
+            },
+            {
+              "id": "a3000008",
+              "name": "video_url",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "a3000009",
+              "name": "sort_order",
+              "value": "0",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000008",
+      "name": "Set New Script Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [660, 680]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://shlomonizrit.com/api/scripts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000009",
+      "name": "POST Create Script",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 680]
+    },
+    {
+      "parameters": {
+        "content": "## עדכון סקריפט\nPUT /api/scripts\nid חובה - הוסף רק שדות שרוצים לשנות",
+        "height": 100,
+        "width": 660,
+        "color": 3
+      },
+      "id": "a1000000-0000-0000-0000-000000000013",
+      "name": "Sticky Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [400, 850]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000020",
+      "name": "Start - Update Script",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [440, 990]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4000001",
+              "name": "id",
+              "value": "rav-text",
+              "type": "string"
+            },
+            {
+              "id": "a4000002",
+              "name": "price",
+              "value": "59",
+              "type": "number"
+            },
+            {
+              "id": "a4000003",
+              "name": "version",
+              "value": "1.0.2",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000021",
+      "name": "Set Update Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [660, 990]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://shlomonizrit.com/api/scripts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000022",
+      "name": "PUT Update Script",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 990]
+    },
+    {
+      "parameters": {
+        "content": "## מחיקת סקריפט\nDELETE /api/scripts?id=xxx\nמחיקה רכה - הסקריפט נשאר בDB אבל לא מוצג",
+        "height": 100,
+        "width": 400,
+        "color": 2
+      },
+      "id": "a1000000-0000-0000-0000-000000000014",
+      "name": "Sticky Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [400, 1140]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000030",
+      "name": "Start - Delete Script",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [440, 1280]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a5000001",
+              "name": "script_id",
+              "value": "script-id-to-delete",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000031",
+      "name": "Set Delete ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [660, 1280]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://shlomonizrit.com/api/scripts?id={{ $json.script_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000032",
+      "name": "DELETE Script",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 1280]
+    },
+    {
+      "parameters": {
+        "content": "## בדיקת מצב האתר\nGET /api/site-mode\nמחזיר maintenance_mode ו-shabbat_mode",
+        "height": 100,
+        "width": 400,
+        "color": 6
+      },
+      "id": "a1000000-0000-0000-0000-000000000015",
+      "name": "Sticky Note 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [400, 1430]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000040",
+      "name": "Start - Get Site Mode",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [440, 1570]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://shlomonizrit.com/api/site-mode",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000041",
+      "name": "GET Site Mode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 1570]
+    },
+    {
+      "parameters": {
+        "content": "## הפעלת/כיבוי תחזוקה\nPOST /api/site-mode\nשנה enabled ל-true להפעלה או false לכיבוי",
+        "height": 100,
+        "width": 400,
+        "color": 6
+      },
+      "id": "a1000000-0000-0000-0000-000000000016",
+      "name": "Sticky Note 7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [400, 1700]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000050",
+      "name": "Start - Toggle Maintenance",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [440, 1840]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a6000001",
+              "name": "mode",
+              "value": "maintenance_mode",
+              "type": "string"
+            },
+            {
+              "id": "a6000002",
+              "name": "enabled",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000051",
+      "name": "Set Maintenance",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [660, 1840]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://shlomonizrit.com/api/site-mode",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000052",
+      "name": "POST Maintenance Mode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 1840]
+    },
+    {
+      "parameters": {
+        "content": "## הפעלת/כיבוי שבת\nPOST /api/site-mode\nשנה enabled ל-true להפעלה או false לכיבוי",
+        "height": 100,
+        "width": 400,
+        "color": 6
+      },
+      "id": "a1000000-0000-0000-0000-000000000017",
+      "name": "Sticky Note 8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [400, 1980]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000060",
+      "name": "Start - Toggle Shabbat",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [440, 2120]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a7000001",
+              "name": "mode",
+              "value": "shabbat_mode",
+              "type": "string"
+            },
+            {
+              "id": "a7000002",
+              "name": "enabled",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000061",
+      "name": "Set Shabbat",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [660, 2120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://shlomonizrit.com/api/site-mode",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000062",
+      "name": "POST Shabbat Mode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 2120]
+    }
+  ],
+  "connections": {
+    "Start - List Scripts": {
+      "main": [
+        [
+          {
+            "node": "GET All Scripts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Get Script": {
+      "main": [
+        [
+          {
+            "node": "Set Script ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Script ID": {
+      "main": [
+        [
+          {
+            "node": "GET Single Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Create Script": {
+      "main": [
+        [
+          {
+            "node": "Set New Script Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set New Script Data": {
+      "main": [
+        [
+          {
+            "node": "POST Create Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Update Script": {
+      "main": [
+        [
+          {
+            "node": "Set Update Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Update Data": {
+      "main": [
+        [
+          {
+            "node": "PUT Update Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Delete Script": {
+      "main": [
+        [
+          {
+            "node": "Set Delete ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Delete ID": {
+      "main": [
+        [
+          {
+            "node": "DELETE Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Get Site Mode": {
+      "main": [
+        [
+          {
+            "node": "GET Site Mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Toggle Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Set Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Maintenance": {
+      "main": [
+        [
+          {
+            "node": "POST Maintenance Mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Toggle Shabbat": {
+      "main": [
+        [
+          {
+            "node": "Set Shabbat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Shabbat": {
+      "main": [
+        [
+          {
+            "node": "POST Shabbat Mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": []
+}

@@ -25,8 +25,8 @@ export default function AboutPage() {
         </h1>
         <p className="text-[15px] text-t-dim max-w-lg mx-auto leading-relaxed">
           {lang === "he"
-            ? "Shlomo Nizrit Scripts הוא אוסף סקריפטים מקצועיים ל-Adobe InDesign שנועדו לפתור את הבעיות שמעצבים ומעמדים פוגשים כל יום בעבודה."
-            : "Shlomo Nizrit Scripts is a collection of professional Adobe InDesign scripts designed to solve the problems designers and typesetters face every day."}
+            ? "Shlomo Nizrit הוא אוסף סקריפטים מקצועיים ל-Adobe InDesign שנועדו לפתור את הבעיות שמעצבים ומעמדים פוגשים כל יום בעבודה."
+            : "Shlomo Nizrit is a collection of professional Adobe InDesign scripts designed to solve the problems designers and typesetters face every day."}
         </p>
         <div className="mt-6 space-y-1 text-sm text-t-muted">
           <p>{lang === "he" ? "פחות עבודה ידנית." : "Less manual work."}</p>
@@ -77,7 +77,7 @@ export default function AboutPage() {
               : "When I realized that other designers and typesetters face exactly the same problems — I decided to turn these tools into an organized project."}
           </p>
           <p className="text-t-muted font-medium">
-            {lang === "he" ? "וכך נולד Shlomo Nizrit Scripts." : "And so Shlomo Nizrit Scripts was born."}
+            {lang === "he" ? "וכך נולד Shlomo Nizrit." : "And so Shlomo Nizrit was born."}
           </p>
         </div>
       </div>
