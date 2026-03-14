@@ -315,7 +315,6 @@ export default function AdminScriptsPage() {
               <label className="block text-xs text-t-faint mb-1.5">קישור הורדה</label>
               <input
                 type="url"
-                required
                 value={form.downloadUrl}
                 onChange={(e) => updateField("downloadUrl", e.target.value)}
                 placeholder="https://drive.google.com/..."
