@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/lib/themeContext";
 import { LanguageProvider } from "@/lib/languageContext";
 import { AuthProvider } from "@/lib/authContext";
 import { ScriptsProvider } from "@/lib/scriptsContext";
+import ExtensionFloatingButton from "@/components/ExtensionFloatingButton";
 
 export const metadata: Metadata = {
   title: "Shlomo Nizrit | סקריפטים מקצועיים לאינדיזיין",
@@ -31,6 +32,7 @@ export default function RootLayout({
               <FireCursor />
               <Header />
               <main className="flex-1">{children}</main>
+              <ExtensionFloatingButton />
               <Footer />
             </CartProvider>
             </ScriptsProvider>
