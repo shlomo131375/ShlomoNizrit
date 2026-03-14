@@ -375,6 +375,271 @@
     },
     {
       "parameters": {
+        "content": "## קריאת מדריך של סקריפט\nGET /api/scripts/{id}/guide\nמחזיר את כל בלוקי המדריך",
+        "height": 100,
+        "width": 400,
+        "color": 7
+      },
+      "id": "a1000000-0000-0000-0000-000000000070",
+      "name": "Sticky Note - Get Guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1200, -20]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000071",
+      "name": "Start - Get Guide",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [1240, 120]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8000001",
+              "name": "script_id",
+              "value": "rav-text",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000072",
+      "name": "Set Guide Script ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1460, 120]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://shlomonizrit.com/api/scripts/{{ $json.script_id }}/guide",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000073",
+      "name": "GET Guide",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 120]
+    },
+    {
+      "parameters": {
+        "content": "## החלפת מדריך שלם\nPUT /api/scripts/{id}/guide\nשולח מערך שלם של בלוקים\nסוגים: heading, text, image, list, divider",
+        "height": 130,
+        "width": 660,
+        "color": 7
+      },
+      "id": "a1000000-0000-0000-0000-000000000074",
+      "name": "Sticky Note - Set Guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1200, 250]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000075",
+      "name": "Start - Set Full Guide",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [1240, 420]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8100001",
+              "name": "script_id",
+              "value": "rav-text",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000076",
+      "name": "Set Guide Target",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1460, 420]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://shlomonizrit.com/api/scripts/{{ $json.script_id }}/guide",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"guide\": [\n    { \"type\": \"heading\", \"content\": \"כותרת המדריך\" },\n    { \"type\": \"text\", \"content\": \"הסבר על השימוש בסקריפט\" },\n    { \"type\": \"image\", \"imageUrl\": \"https://example.com/screenshot.png\", \"content\": \"כיתוב לתמונה\" },\n    { \"type\": \"list\", \"items\": [\"שלב 1\", \"שלב 2\", \"שלב 3\"] },\n    { \"type\": \"divider\" },\n    { \"type\": \"heading\", \"content\": \"טיפים\" },\n    { \"type\": \"text\", \"content\": \"טקסט נוסף כאן\" }\n  ]\n}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000077",
+      "name": "PUT Full Guide",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 420]
+    },
+    {
+      "parameters": {
+        "content": "## הוספת בלוק למדריך\nPATCH /api/scripts/{id}/guide\naction: append/prepend/insert/remove/clear\nappend = הוסף בסוף, prepend = הוסף בהתחלה",
+        "height": 130,
+        "width": 660,
+        "color": 7
+      },
+      "id": "a1000000-0000-0000-0000-000000000078",
+      "name": "Sticky Note - Add Block",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1200, 560]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000079",
+      "name": "Start - Add Guide Block",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [1240, 730]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8200001",
+              "name": "script_id",
+              "value": "rav-text",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000080",
+      "name": "Set Block Target",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1460, 730]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://shlomonizrit.com/api/scripts/{{ $json.script_id }}/guide",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"action\": \"append\",\n  \"blocks\": [\n    { \"type\": \"heading\", \"content\": \"כותרת חדשה\" },\n    { \"type\": \"text\", \"content\": \"טקסט חדש\" }\n  ]\n}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000081",
+      "name": "PATCH Add Block",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 730]
+    },
+    {
+      "parameters": {
+        "content": "## ניקוי מדריך\nPATCH /api/scripts/{id}/guide\naction: clear - מוחק את כל המדריך",
+        "height": 100,
+        "width": 400,
+        "color": 7
+      },
+      "id": "a1000000-0000-0000-0000-000000000082",
+      "name": "Sticky Note - Clear Guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1200, 870]
+    },
+    {
+      "parameters": {},
+      "id": "a1000000-0000-0000-0000-000000000083",
+      "name": "Start - Clear Guide",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [1240, 1010]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8300001",
+              "name": "script_id",
+              "value": "rav-text",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000084",
+      "name": "Set Clear Target",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1460, 1010]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://shlomonizrit.com/api/scripts/{{ $json.script_id }}/guide",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "9ea53d534b6419f8e9f0f8a42192aa053138aef5043b089bb24d128418cbf632"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"action\": \"clear\", \"blocks\": [{ \"type\": \"divider\" }] }",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000085",
+      "name": "PATCH Clear Guide",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 1010]
+    },
+    {
+      "parameters": {
         "content": "## בדיקת מצב האתר\nGET /api/site-mode\nמחזיר maintenance_mode ו-shabbat_mode",
         "height": 100,
         "width": 400,
@@ -649,6 +914,94 @@
         [
           {
             "node": "DELETE Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Get Guide": {
+      "main": [
+        [
+          {
+            "node": "Set Guide Script ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Guide Script ID": {
+      "main": [
+        [
+          {
+            "node": "GET Guide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Set Full Guide": {
+      "main": [
+        [
+          {
+            "node": "Set Guide Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Guide Target": {
+      "main": [
+        [
+          {
+            "node": "PUT Full Guide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Add Guide Block": {
+      "main": [
+        [
+          {
+            "node": "Set Block Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Block Target": {
+      "main": [
+        [
+          {
+            "node": "PATCH Add Block",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start - Clear Guide": {
+      "main": [
+        [
+          {
+            "node": "Set Clear Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Clear Target": {
+      "main": [
+        [
+          {
+            "node": "PATCH Clear Guide",
             "type": "main",
             "index": 0
           }
