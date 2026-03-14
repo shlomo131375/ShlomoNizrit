@@ -7,6 +7,7 @@ import { useScripts } from "@/lib/scriptsContext";
 import { useCart } from "@/lib/cartContext";
 import { useLanguage } from "@/lib/languageContext";
 import ScriptCard from "@/components/ScriptCard";
+import ReviewSection from "@/components/ReviewSection";
 import type { GuideBlock } from "@/data/scripts";
 
 function GuideRenderer({ blocks, lang }: { blocks: GuideBlock[]; lang: string }) {
@@ -302,6 +303,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
       </div>
+
+      {/* Reviews */}
+      <ReviewSection scriptId={script.id} />
 
       {/* Related */}
       {related.length > 0 && (

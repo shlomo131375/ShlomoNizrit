@@ -159,6 +159,28 @@ const translations: Record<string, Record<Language, string>> = {
   "footer.nav": { he: "ניווט", en: "Navigation" },
   "footer.contact": { he: "יצירת קשר", en: "Contact" },
 
+  // Reviews
+  "reviews.title": { he: "ביקורות", en: "Reviews" },
+  "reviews.count": { he: "ביקורות", en: "reviews" },
+  "reviews.write": { he: "כתוב ביקורת", en: "Write a Review" },
+  "reviews.yourRating": { he: "הדירוג שלך", en: "Your Rating" },
+  "reviews.yourComment": { he: "הביקורת שלך", en: "Your Review" },
+  "reviews.commentPlaceholder": { he: "שתף את החוויה שלך עם הסקריפט...", en: "Share your experience with this script..." },
+  "reviews.displayAs": { he: "הצג את השם שלי בתור", en: "Display my name as" },
+  "reviews.realName": { he: "השם שלי", en: "My name" },
+  "reviews.customName": { he: "שם אחר", en: "Custom name" },
+  "reviews.anonymous": { he: "אנונימי", en: "Anonymous" },
+  "reviews.enterName": { he: "הכנס שם להצגה...", en: "Enter display name..." },
+  "reviews.submit": { he: "פרסם ביקורת", en: "Submit Review" },
+  "reviews.cancel": { he: "ביטול", en: "Cancel" },
+  "reviews.ratingRequired": { he: "בחר דירוג", en: "Please select a rating" },
+  "reviews.commentRequired": { he: "כתוב ביקורת", en: "Please write a review" },
+  "reviews.alreadyReviewed": { he: "כבר כתבת ביקורת לסקריפט הזה", en: "You already reviewed this script" },
+  "reviews.noReviews": { he: "עדיין אין ביקורות. היה הראשון!", en: "No reviews yet. Be the first!" },
+  "reviews.loginToReview": { he: "התחבר כדי לכתוב ביקורת", en: "Log in to write a review" },
+  "reviews.login": { he: "התחבר", en: "Log in" },
+  "reviews.showAll": { he: "הצג את כל הביקורות", en: "Show all reviews" },
+
   // Common
   "loading": { he: "טוען...", en: "Loading..." },
 };
